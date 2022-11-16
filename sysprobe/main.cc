@@ -1,12 +1,21 @@
 #include "sysprobe/handler.h"
 #include "sysprobe/sysprobe.skel.h"
-#include <cassert>
+#include <csignal>
+#include <iostream>
+
+static void handler(int sig)
+{
+	std::cout << strsignal(sig) << std::endl;
+}
 
 int main()
 {
 	int retval = 0;
 	struct sysprobe *skel = NULL;
 	struct ring_buffer *rb = NULL;
+
+	signal(SIGINT, handler);
+	signal(SIGTERM, handler);
 
 	skel = sysprobe__open_and_load();
 	if (!skel)
