@@ -1,6 +1,7 @@
 #include "sysprobe-common/log.h"
 #include "sysprobe/handler.h"
 #include <ctime>
+#include <iomanip>
 #include <iostream>
 
 // 根据系统启动时间和内核记录的纳秒时间戳计算事件产生的时间
@@ -32,8 +33,8 @@ int handle_log_event(void *ctx, void *data, size_t len)
 	clock_get_event_time(e->nsec, &now);
 
 	struct tm t;
-	char date_time[64];
+	char date_time[32];
 	strftime(date_time, sizeof(date_time), "%Y-%m-%d %H:%M:%S", localtime_r(&now.tv_sec, &t));
-	std::cout << date_time << "." << now.tv_nsec << " " << e->msg << std::endl;
+	std::cout << date_time << "." << std::setw(9) << std::setfill('0') << now.tv_nsec << " " << e->msg << std::endl;
 	return 0;
 }
