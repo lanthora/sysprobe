@@ -1,5 +1,5 @@
-#include "../sysprobe-common/log.h"
-#include "sysprobe.skel.h"
+#include "sysprobe-common/log.h"
+#include "sysprobe/sysprobe.skel.h"
 #include <assert.h>
 #include <iostream>
 

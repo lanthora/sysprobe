@@ -1,5 +1,5 @@
 target/sysprobe: sysprobe/sysprobe.skel.h sysprobe/* sysprobe-common/*
-	clang++ sysprobe/log.cc -lbpf -o target/sysprobe
+	clang++ -I . sysprobe/log.cc -lbpf -o target/sysprobe
 
 sysprobe/sysprobe.skel.h: sysprobe-ebpf/vmlinux.h sysprobe-ebpf/* sysprobe-common/*
 	clang -g -O2 -target bpf -I . -c  sysprobe-ebpf/sysprobe.c -o target/sysprobe.o

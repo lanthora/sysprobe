@@ -1,8 +1,8 @@
 #ifndef SYSPROBE_EBPF_LOG_H
 #define SYSPROBE_EBPF_LOG_H
 
-#include "../sysprobe-common/log.h"
-#include "vmlinux.h"
+#include "sysprobe-common/log.h"
+#include "sysprobe-ebpf/vmlinux.h"
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>

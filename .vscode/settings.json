@@ -1,13 +1,5 @@
 {
-        "files.associations": {
-                "log.h": "c",
-                "bpf_helpers.h": "c",
-                "bpf_core_read.h": "c",
-                "bpf_tracing.h": "c",
-                "bpf_helper_defs.h": "c",
-                "numbers": "c",
-                "atomic": "cpp",
-                "sstream": "cpp"
-        },
-        "editor.formatOnSave": true
+	"editor.formatOnSave": true,
+	"C_Cpp.clang_format_sortIncludes": true,
+	"C_Cpp.autoAddFileAssociations": false
 }

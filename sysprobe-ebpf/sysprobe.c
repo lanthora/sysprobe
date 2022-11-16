@@ -1,4 +1,4 @@
-#include "log.h"
+#include "sysprobe-ebpf/log.h"
 
 char LICENSE[] SEC("license") = "GPL";
 
