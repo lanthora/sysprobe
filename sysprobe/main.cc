@@ -4,10 +4,10 @@
 
 int main()
 {
-	struct sysprobe *skel = sysprobe::open_and_load();
+	struct sysprobe *skel = sysprobe__open_and_load();
 	assert(skel);
 
-	int retval = sysprobe::attach(skel);
+	int retval = sysprobe__attach(skel);
 	assert(retval == 0);
 
 	struct ring_buffer *rb = ring_buffer__new(bpf_map__fd(skel->maps.ringbuf), handle_event, NULL, NULL);
