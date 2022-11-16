@@ -3,8 +3,8 @@
 
 #define LOG_LEN_MAX 1024
 
-struct log_event {
-	unsigned int len;
+struct elog {
+	unsigned int type;
 	char msg[LOG_LEN_MAX];
 };
 

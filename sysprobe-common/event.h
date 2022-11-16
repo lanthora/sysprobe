@@ -1,0 +1,9 @@
+#ifndef SYSPROBE_COMMON_EVENT_H
+#define SYSPROBE_COMMON_EVENT_H
+
+enum rb_event {
+	RB_EVENT_RESERVE,
+	RB_EVENT_LOG,
+};
+
+#endif

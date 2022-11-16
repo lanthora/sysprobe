@@ -1,30 +1,16 @@
 #include "sysprobe-common/log.h"
-#include "sysprobe/sysprobe.skel.h"
-#include <assert.h>
+#include "sysprobe/handler.h"
+#include <ctime>
 #include <iostream>
 
-static int handle_log_event(void *ctx, void *data, size_t data_sz)
+int handle_log_event(void *ctx, void *data, size_t len)
 {
-	struct log_event *e = (struct log_event *)data;
-	std::cout << e->msg << std::endl;
-	return 0;
-}
+	time_t t = time(0);
+	char now[32] = { 0 };
+	strftime(now, sizeof(now), "%Y-%m-%d %H:%M:%S", localtime(&t));
 
-int main()
-{
-	struct sysprobe *skel = sysprobe::open_and_load();
-	assert(skel);
+	struct elog *e = (struct elog *)data;
 
-	int retval = sysprobe::attach(skel);
-	assert(retval == 0);
-
-	struct ring_buffer *rb = ring_buffer__new(bpf_map__fd(skel->maps.log_ringbuf), handle_log_event, NULL, NULL);
-	assert(rb);
-
-	while (true) {
-		retval = ring_buffer__poll(rb, 100);
-		if (retval < 0)
-			break;
-	}
+	std::cout << now << " " << e->msg << std::endl;
 	return 0;
 }
