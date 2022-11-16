@@ -14,6 +14,7 @@
 		e = (struct elog *)bpf_ringbuf_reserve(&ringbuf, sizeof(*e), 0);                                       \
 		if (e) {                                                                                               \
 			e->type = RB_EVENT_LOG;                                                                        \
+			e->nsec = bpf_ktime_get_boot_ns();                                                             \
 			int len = BPF_SNPRINTF(e->msg, LOG_LEN_MAX, fmt, args);                                        \
 			if (len > 0) {                                                                                 \
 				bpf_ringbuf_submit(e, 0);                                                              \

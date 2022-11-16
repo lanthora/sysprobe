@@ -5,6 +5,7 @@
 
 struct elog {
 	unsigned int type;
+	unsigned long long nsec;
 	char msg[LOG_LEN_MAX];
 };
 
