@@ -9,4 +9,10 @@ static int try_sched_process_fork(struct trace_event_raw_sched_process_fork *ctx
 	return 0;
 }
 
+static int try_sched_process_exit(struct trace_event_raw_sched_process_template *ctx)
+{
+	LOG("exit: pid=%d", ctx->pid);
+	return 0;
+}
+
 #endif
