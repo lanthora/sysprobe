@@ -15,7 +15,11 @@
 #endif
 
 #ifndef CONFIG_CTL_SOCKET_PATH
-#define CONFIG_CTL_SOCKET_PATH "/var/run/sysprobectl.sock"
+#define CONFIG_CTL_SOCKET_PATH "/var/run/sysprobectld.sock"
+#endif
+
+#ifndef CONFIG_CTL_BUFFER_SIZE_MAX
+#define CONFIG_CTL_BUFFER_SIZE_MAX (1024)
 #endif
 
 #endif

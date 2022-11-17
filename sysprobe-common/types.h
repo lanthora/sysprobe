@@ -27,6 +27,7 @@ struct pproc_cfg {
 
 // sysprobe-ctl 请求响应的事件
 enum {
+	CTL_EVENT_UNSPEC,
 	CTL_EVENT_IO_EVENT,
 };
 

@@ -2,7 +2,7 @@
 #include "sysprobe/handler.h"
 #include "sysprobe/sysprobe.skel.h"
 
-extern int sysprobectl(struct sysprobe *skel);
+extern int start_sysprobectld(struct sysprobe *skel);
 
 int main()
 {
@@ -26,7 +26,7 @@ int main()
 	if (!rb)
 		goto detach;
 
-	retval = sysprobectl(skel);
+	retval = start_sysprobectld(skel);
 	if (retval)
 		goto rbfree;
 
