@@ -1,7 +1,20 @@
 #include "sysprobe/handler.h"
 #include "sysprobe-common/types.h"
-#include <cassert>
+#include <csignal>
+#include <cstring>
 #include <iostream>
+
+static void handle_signal(int sig)
+{
+	std::cout << strsignal(sig) << std::endl;
+}
+
+int register_sig_handler()
+{
+	signal(SIGINT, handle_signal);
+	signal(SIGTERM, handle_signal);
+	return 0;
+}
 
 int handle_event(void *ctx, void *data, size_t len)
 {

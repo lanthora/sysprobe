@@ -15,7 +15,11 @@ static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
 	size_t count = (size_t)ctx->args[2];
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
-	if (cfg && cfg->io_event_enabled) {
+	if (!cfg || !cfg->io_event_socket_disabled) {
+		// TODO: 检测是否为 socket 类型,处理后上报
+	}
+
+	if (cfg && cfg->io_event_others_enabled) {
 		LOG("enter read: tgid=%d pid=%d fd=%d, buf=%p count=%d", tgid, pid, fd, buf, count);
 	}
 
@@ -31,7 +35,12 @@ static int try_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 	int ret = (int)ctx->ret;
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
-	if (cfg && cfg->io_event_enabled) {
+
+	if (!cfg || !cfg->io_event_socket_disabled) {
+		// TODO: 检测是否为 socket 类型,处理后上报
+	}
+
+	if (cfg && cfg->io_event_others_enabled) {
 		LOG("exit read: tgid=%d pid=%d ret=%d", tgid, pid, ret);
 	}
 

@@ -13,4 +13,8 @@
 #define CONFIG_PROCESS_NUMBER_MAX (10240)
 #endif
 
+#ifndef CONFIG_CTL_SOCKET_PATH
+#define CONFIG_CTL_SOCKET_PATH "/var/run/sysprobectl.sock"
+#endif
+
 #endif

@@ -1,12 +1,7 @@
 #include "sysprobe/handler.h"
 #include "sysprobe/sysprobe.skel.h"
-#include <csignal>
-#include <iostream>
 
-static void handler(int sig)
-{
-	std::cout << strsignal(sig) << std::endl;
-}
+extern int sysprobectl(struct sysprobe *skel);
 
 int main()
 {
@@ -14,8 +9,9 @@ int main()
 	struct sysprobe *skel = NULL;
 	struct ring_buffer *rb = NULL;
 
-	signal(SIGINT, handler);
-	signal(SIGTERM, handler);
+	retval = register_sig_handler();
+	if (retval)
+		goto out;
 
 	skel = sysprobe__open_and_load();
 	if (!skel)
@@ -29,10 +25,15 @@ int main()
 	if (!rb)
 		goto detach;
 
+	retval = sysprobectl(skel);
+	if (retval)
+		goto rbfree;
+
 	do {
 		retval = ring_buffer__poll(rb, 100);
 	} while (retval >= 0);
 
+rbfree:
 	ring_buffer__free(rb);
 detach:
 	sysprobe__detach(skel);
