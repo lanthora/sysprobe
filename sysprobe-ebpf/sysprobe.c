@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 #include "sysprobe-ebpf/sched.h"
 #include "sysprobe-ebpf/syscalls.h"
 

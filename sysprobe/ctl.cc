@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 #include "errno.h"
 #include "sysprobe-common/types.h"
 #include "sysprobe/sysprobe.skel.h"

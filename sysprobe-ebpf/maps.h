@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0-only
 #ifndef SYSPROBE_EBPF_MAPS_H
 #define SYSPROBE_EBPF_MAPS_H
 

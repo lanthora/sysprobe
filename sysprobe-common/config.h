@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 #ifndef SYSPROBE_COMMON_CONFIG_H
 #define SYSPROBE_COMMON_CONFIG_H
 
