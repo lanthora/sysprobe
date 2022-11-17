@@ -1,8 +1,7 @@
 #ifndef SYSPROBE_EBPF_LOG_H
 #define SYSPROBE_EBPF_LOG_H
 
-#include "sysprobe-common/event.h"
-#include "sysprobe-common/log.h"
+#include "sysprobe-common/types.h"
 #include "sysprobe-ebpf/maps.h"
 #include "sysprobe-ebpf/vmlinux.h"
 #include <bpf/bpf_core_read.h>
@@ -15,7 +14,7 @@
 		if (e) {                                                                                               \
 			e->type = RB_EVENT_LOG;                                                                        \
 			e->nsec = bpf_ktime_get_boot_ns();                                                             \
-			int len = BPF_SNPRINTF(e->msg, LOG_LEN_MAX, fmt, args);                                        \
+			int len = BPF_SNPRINTF(e->msg, CONFIG_LOG_LEN_MAX, fmt, args);                                 \
 			if (len > 0) {                                                                                 \
 				bpf_ringbuf_submit(e, 0);                                                              \
 			} else {                                                                                       \

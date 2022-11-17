@@ -1,14 +1,19 @@
+all: target/sysprobe target/sysprobe-ctl
+
+target/sysprobe-ctl: sysprobe-ctl/* sysprobe-common/*
+	clang++ -g -O2 -I . sysprobe-ctl/*.cc -o target/sysprobe-ctl
+
 target/sysprobe: sysprobe/sysprobe.skel.h sysprobe/* sysprobe-common/*
-	clang++ -I . sysprobe/*.cc -lbpf -o target/sysprobe
+	clang++ -g -O2 -I . -lbpf sysprobe/*.cc -o target/sysprobe
 
 sysprobe/sysprobe.skel.h: sysprobe-ebpf/vmlinux.h sysprobe-ebpf/* sysprobe-common/*
-	clang -g -O2 -target bpf -I . -c  sysprobe-ebpf/sysprobe.c -o target/sysprobe.o
+	clang -g -O2 -I . -target bpf -c  sysprobe-ebpf/sysprobe.c -o target/sysprobe.o
 	bpftool gen skeleton target/sysprobe.o > sysprobe/sysprobe.skel.h
 
 sysprobe-ebpf/vmlinux.h:
 	bpftool btf dump file /sys/kernel/btf/vmlinux format c > sysprobe-ebpf/vmlinux.h
 
-run: target/sysprobe
-	@target/sysprobe
+clean:
+	rm -f sysprobe-ebpf/vmlinux.h sysprobe/sysprobe.skel.h target/*
 
-.PHONY: run
+.PHONY: all clean

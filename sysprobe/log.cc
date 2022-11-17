@@ -1,4 +1,4 @@
-#include "sysprobe-common/log.h"
+#include "sysprobe-common/types.h"
 #include "sysprobe/handler.h"
 #include <ctime>
 #include <iomanip>
