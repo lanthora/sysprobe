@@ -19,4 +19,11 @@ struct {
 	__type(value, struct pproc_cfg);
 } pproc_cfg_map SEC(".maps");
 
+struct {
+	__uint(type, BPF_MAP_TYPE_ARRAY);
+	__uint(max_entries, 1);
+	__type(key, int);
+	__type(value, struct global_cfg);
+} global_cfg_map SEC(".maps");
+
 #endif

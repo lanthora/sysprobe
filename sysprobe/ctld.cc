@@ -10,14 +10,39 @@
 #include <thread>
 #include <unistd.h>
 
-static int handle_ctl_io_event_others(struct ctl_io_event *event, struct sysprobe *skel)
+int ctld::handle_io_event_others(void *buffer, int len)
 {
+	if (len != sizeof(struct ctl_io_event_others)) {
+		ERR("Invalid argument");
+		return 0;
+	}
+
+	struct ctl_io_event_others *event = (struct ctl_io_event_others *)buffer;
 	struct pproc_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
 
 	cfg.tgid = event->tgid;
 	cfg.io_event_others_enabled = event->io_event_others_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
+
+	event->ret = 0;
+	return 0;
+}
+
+int ctld::handle_log(void *buffer, int len)
+{
+	if (len != sizeof(struct ctl_log)) {
+		ERR("Invalid argument");
+		return 0;
+	}
+
+	struct ctl_log *event = (struct ctl_log *)buffer;
+	int k0 = 0;
+	struct global_cfg cfg = {};
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg);
+
+	cfg.log_enabled = event->log_enabled;
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -61,8 +86,11 @@ int ctld::serve()
 		type = CTL_EVENT_UNSPEC;
 		memcpy(&type, buffer, CTL_TYPE_LEN);
 		switch (type) {
-		case CTL_EVENT_IO_EVENT:
-			handle_ctl_io_event_others((struct ctl_io_event *)buffer, skel_);
+		case CTL_EVENT_IO_EVENT_OTHERS:
+			handle_io_event_others(buffer, size);
+			break;
+		case CTL_EVENT_LOG:
+			handle_log(buffer, size);
 			break;
 		}
 		size = sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);
