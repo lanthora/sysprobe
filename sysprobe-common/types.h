@@ -25,16 +25,28 @@ struct pproc_cfg {
 	int io_event_others_enabled;
 } __attribute__((__packed__));
 
+// 全局配置,成员表示方式与 pproc_cfg 一致
+struct global_cfg {
+	int log_enabled;
+} __attribute__((__packed__));
+
 // sysprobe-ctl 请求响应的事件
 enum {
 	CTL_EVENT_UNSPEC,
-	CTL_EVENT_IO_EVENT,
+	CTL_EVENT_IO_EVENT_OTHERS,
+	CTL_EVENT_LOG,
 };
 
-struct ctl_io_event {
-	unsigned int type; // always CTL_EVENT_IO_EVENT
+struct ctl_io_event_others {
+	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS
 	int tgid;
 	int io_event_others_enabled;
+	int ret;
+} __attribute__((__packed__));
+
+struct ctl_log {
+	unsigned int type; // always CTL_EVENT_LOG
+	int log_enabled;
 	int ret;
 } __attribute__((__packed__));
 
