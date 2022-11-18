@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
+#include "sysprobe/ctld.h"
 #include "errno.h"
 #include "sysprobe-common/types.h"
 #include "sysprobe/sysprobe.skel.h"
+#include "sysprobe/util.h"
 #include <bpf/bpf.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -21,56 +23,70 @@ static int handle_ctl_io_event_others(struct ctl_io_event *event, struct sysprob
 	return 0;
 }
 
-static int create_ctld_socket_fd()
+int ctld::init_socket_fd()
 {
-	int socket_fd = socket(AF_UNIX, SOCK_DGRAM, 0);
-	if (socket_fd == -1)
+	socket_fd_ = socket(AF_UNIX, SOCK_DGRAM, 0);
+	if (socket_fd_ == -1)
 		return -errno;
 
-	struct sockaddr_un server;
-	server.sun_family = AF_UNIX;
-	strcpy(server.sun_path, CONFIG_CTL_SOCKET_PATH);
+	server_.sun_family = AF_UNIX;
+	strcpy(server_.sun_path, CONFIG_CTL_SOCKET_PATH);
 
 	if (unlink(CONFIG_CTL_SOCKET_PATH) && errno == EPERM)
 		return -EPERM;
 
-	if (bind(socket_fd, (struct sockaddr *)&server, sizeof(server)) == -1)
+	if (bind(socket_fd_, (struct sockaddr *)&server_, sizeof(server_)) == -1)
 		return -errno;
 
-	return socket_fd;
-}
-
-static int sysprobectld(int socket_fd, struct sysprobe *skel)
-{
-	char buffer[CONFIG_CTL_BUFFER_SIZE_MAX + 1];
-	socklen_t len;
-	struct sockaddr_un peer;
-
-	while (true) {
-		len = sizeof(peer);
-		int size = recvfrom(socket_fd, buffer, CONFIG_CTL_BUFFER_SIZE_MAX, 0, (struct sockaddr *)&peer, &len);
-		if (size < sizeof(unsigned int))
-			break;
-
-		unsigned int type = CTL_EVENT_UNSPEC;
-		memcpy(&type, buffer, sizeof(unsigned int));
-		switch (type) {
-		case CTL_EVENT_IO_EVENT:
-			handle_ctl_io_event_others((struct ctl_io_event *)buffer, skel);
-			break;
-		}
-		sendto(socket_fd, buffer, size, 0, (struct sockaddr *)&peer, len);
-	}
 	return 0;
 }
 
-int start_sysprobectld(struct sysprobe *skel)
+int ctld::serve()
 {
-	int socket_fd = create_ctld_socket_fd();
-	if (socket_fd < 0)
-		return socket_fd;
+	static const int CTL_TYPE_LEN = 4;
+	char buffer[CONFIG_CTL_BUFFER_SIZE_MAX + 1];
+	socklen_t len;
+	struct sockaddr_un peer;
+	int size;
+	unsigned int type;
 
-	std::thread sysprobectl_thread([&]() { sysprobectld(socket_fd, skel); });
-	sysprobectl_thread.detach();
+	while (true) {
+		len = sizeof(peer);
+		size = recvfrom(socket_fd_, buffer, CONFIG_CTL_BUFFER_SIZE_MAX, 0, (struct sockaddr *)&peer, &len);
+		if (size < CTL_TYPE_LEN) {
+			ERR("size=[%d] strerror=[%s]", size, strerror(errno));
+			break;
+		}
+
+		type = CTL_EVENT_UNSPEC;
+		memcpy(&type, buffer, CTL_TYPE_LEN);
+		switch (type) {
+		case CTL_EVENT_IO_EVENT:
+			handle_ctl_io_event_others((struct ctl_io_event *)buffer, skel_);
+			break;
+		}
+		size = sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);
+		if (size == -1) {
+			ERR("strerror=[%s] peer=[%s]", strerror(errno), peer.sun_path);
+		}
+	}
+	close(socket_fd_);
+	return size;
+}
+
+int ctld::start(struct sysprobe *skel)
+{
+	int ret;
+
+	if (!skel)
+		return -EINVAL;
+	skel_ = skel;
+
+	ret = init_socket_fd();
+	if (ret)
+		return ret;
+
+	std::thread serve_thread([&]() { serve(); });
+	serve_thread.detach();
 	return 0;
 }
