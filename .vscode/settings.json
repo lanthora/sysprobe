@@ -2,5 +2,8 @@
 	"editor.formatOnSave": true,
 	"C_Cpp.clang_format_sortIncludes": true,
 	"C_Cpp.autoAddFileAssociations": false,
-	"files.insertFinalNewline": true
+	"files.insertFinalNewline": true,
+	"python.formatting.autopep8Args": [
+		"--max-line-length=200"
+	],
 }
