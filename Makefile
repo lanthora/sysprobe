@@ -1,7 +1,4 @@
-all: target/sysprobe target/sysprobe-ctl
-
-target/sysprobe-ctl: sysprobe-ctl/* sysprobe-common/*
-	clang++ -g -O2 -I . sysprobe-ctl/*.cc -o target/sysprobe-ctl
+all: target/sysprobe
 
 target/sysprobe: sysprobe/sysprobe.skel.h sysprobe/* sysprobe-common/*
 	clang++ -g -O2 -I . -lbpf sysprobe/*.cc -o target/sysprobe
