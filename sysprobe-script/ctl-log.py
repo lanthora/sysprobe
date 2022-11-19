@@ -9,21 +9,19 @@ import tempfile
 client_file = tempfile.NamedTemporaryFile().name
 server_file = '/var/run/sysprobectld.sock'
 
-event_type = 2
 event_enabled = int(sys.argv[1])
-event_ret = -1
 
 unix_domain_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 
 unix_domain_socket.bind(client_file)
 unix_domain_socket.connect(server_file)
 
-bytes_to_send = struct.pack("@Iii", event_type, event_enabled, event_ret)
+bytes_to_send = struct.pack("@Iii", 2, event_enabled, 0)
 unix_domain_socket.send(bytes_to_send)
 bytes_to_unpack = unix_domain_socket.recv(len(bytes_to_send))
 
-event_type, event_enabled, event_ret = struct.unpack("@Iii", bytes_to_unpack)
+_, _, ret = struct.unpack("@Iii", bytes_to_unpack)
 
-print(event_type, event_enabled, event_ret)
+print(ret)
 
 os.unlink(client_file)

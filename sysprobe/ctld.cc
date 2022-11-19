@@ -3,8 +3,8 @@
 #include "errno.h"
 #include "sysprobe-common/types.h"
 #include "sysprobe/sysprobe.skel.h"
-#include "sysprobe/util.h"
 #include <bpf/bpf.h>
+#include <cassert>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <thread>
@@ -12,10 +12,7 @@
 
 int ctld::handle_io_event_others(void *buffer, int len)
 {
-	if (len != sizeof(struct ctl_io_event_others)) {
-		ERR("Invalid argument");
-		return 0;
-	}
+	assert(len == sizeof(struct ctl_io_event_others));
 
 	struct ctl_io_event_others *event = (struct ctl_io_event_others *)buffer;
 	struct pproc_cfg cfg = {};
@@ -31,10 +28,7 @@ int ctld::handle_io_event_others(void *buffer, int len)
 
 int ctld::handle_log(void *buffer, int len)
 {
-	if (len != sizeof(struct ctl_log)) {
-		ERR("Invalid argument");
-		return 0;
-	}
+	assert(len == sizeof(struct ctl_log));
 
 	struct ctl_log *event = (struct ctl_log *)buffer;
 	int k0 = 0;
@@ -51,17 +45,13 @@ int ctld::handle_log(void *buffer, int len)
 int ctld::init_socket_fd()
 {
 	socket_fd_ = socket(AF_UNIX, SOCK_DGRAM, 0);
-	if (socket_fd_ == -1)
-		return -errno;
+	assert(socket_fd_ != 0);
 
 	server_.sun_family = AF_UNIX;
 	strcpy(server_.sun_path, CONFIG_CTL_SOCKET_PATH);
 
-	if (unlink(CONFIG_CTL_SOCKET_PATH) && errno == EPERM)
-		return -EPERM;
-
-	if (bind(socket_fd_, (struct sockaddr *)&server_, sizeof(server_)) == -1)
-		return -errno;
+	assert(!unlink(CONFIG_CTL_SOCKET_PATH) || errno != EPERM);
+	assert(bind(socket_fd_, (struct sockaddr *)&server_, sizeof(server_)) != -1);
 
 	return 0;
 }
@@ -78,10 +68,7 @@ int ctld::serve()
 	while (true) {
 		len = sizeof(peer);
 		size = recvfrom(socket_fd_, buffer, CONFIG_CTL_BUFFER_SIZE_MAX, 0, (struct sockaddr *)&peer, &len);
-		if (size < CTL_TYPE_LEN) {
-			ERR("size=[%d] strerror=[%s]", size, strerror(errno));
-			break;
-		}
+		assert(size >= CTL_TYPE_LEN);
 
 		type = CTL_EVENT_UNSPEC;
 		memcpy(&type, buffer, CTL_TYPE_LEN);
@@ -93,10 +80,7 @@ int ctld::serve()
 			handle_log(buffer, size);
 			break;
 		}
-		size = sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);
-		if (size == -1) {
-			ERR("strerror=[%s] peer=[%s]", strerror(errno), peer.sun_path);
-		}
+		sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);
 	}
 	close(socket_fd_);
 	return size;

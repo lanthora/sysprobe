@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "sysprobe-common/types.h"
 #include "sysprobe/handler.h"
-#include "sysprobe/util.h"
+#include <cstdio>
 #include <ctime>
 
 // 根据系统启动时间和内核记录的纳秒时间戳计算事件产生的时间
@@ -35,6 +35,6 @@ int handle_log_event(void *ctx, void *data, size_t len)
 	struct tm t;
 	char date_time[32];
 	strftime(date_time, sizeof(date_time), "%Y-%m-%d %H:%M:%S", localtime_r(&now.tv_sec, &t));
-	INFO("time=[%s.%09lu] msg=[%s]", date_time, now.tv_nsec, e->msg);
+	printf("[%s.%09lu] %s\n", date_time, now.tv_nsec, e->msg);
 	return 0;
 }

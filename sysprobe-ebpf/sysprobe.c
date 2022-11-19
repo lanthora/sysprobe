@@ -27,3 +27,15 @@ int sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 {
 	return try_sys_exit_read(ctx);
 }
+
+SEC("tracepoint/syscalls/sys_enter_write")
+int sys_enter_write(struct trace_event_raw_sys_enter *ctx)
+{
+	return try_sys_enter_write(ctx);
+}
+
+SEC("tracepoint/syscalls/sys_exit_write")
+int sys_exit_write(struct trace_event_raw_sys_exit *ctx)
+{
+	return try_sys_exit_write(ctx);
+}
