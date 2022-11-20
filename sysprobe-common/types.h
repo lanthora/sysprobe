@@ -8,12 +8,33 @@
 enum {
 	RB_EVENT_UNSPEC,
 	RB_EVENT_LOG,
+	RB_EVENT_PROC,
 };
 
 struct elog {
-	unsigned int type; // always RB_EVENT_LOG
+	// RB_EVENT_LOG
+	unsigned int type;
 	unsigned long long nsec;
 	char msg[CONFIG_LOG_LEN_MAX];
+} __attribute__((__packed__));
+
+struct eproc {
+	// RB_EVENT_PROC
+	unsigned int type;
+	unsigned long long nsec;
+	// 0: 保留
+	// 1: 进程创建
+	// 2: 进程退出
+	int tracepoint;
+	union {
+		// 进程退出时的进程号
+		int pid;
+		// 进程创建时的父进程号
+		int parent_pid;
+	};
+	// 进程创建时的子进程号
+	int child_pid;
+
 } __attribute__((__packed__));
 
 // 与单个进程相关的配置,至少一个功能与默认行为不一致时才会初始化,初始化时字段默认为 0,

@@ -1,0 +1,17 @@
+#!/usr/bin/python
+# SPDX-License-Identifier: Apache-2.0
+import os
+import socket
+
+import config
+
+server_file = config.CONFIG_DATA_SOCKET_PATH
+
+os.unlink(server_file)
+unix_domain_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+
+unix_domain_socket.bind(server_file)
+
+while True:
+    received_bytes = unix_domain_socket.recv(4096)
+    print(received_bytes.hex())

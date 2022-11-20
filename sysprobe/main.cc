@@ -10,7 +10,7 @@ int main()
 	struct ring_buffer *rb = NULL;
 	ctld ctl;
 
-	retval = register_sig_handler();
+	retval = init_handler();
 	if (retval)
 		goto out;
 
