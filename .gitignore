@@ -1,4 +1,5 @@
 sysprobe/sysprobe.skel.h
 sysprobe-ebpf/vmlinux.h
 target/*
+sysprobe-agent/target
 !.gitkeep
