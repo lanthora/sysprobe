@@ -4,11 +4,11 @@ import os
 import socket
 import struct
 import sys
-import tempfile
+import uuid
 
 import config
 
-client_file = tempfile.NamedTemporaryFile().name
+client_file = '/tmp/sysprobe-{}.sock'.format(uuid.uuid4())
 server_file = config.CONFIG_CTL_SOCKET_PATH
 
 event_tgid = int(sys.argv[1])
