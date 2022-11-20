@@ -6,8 +6,10 @@ import struct
 import sys
 import tempfile
 
+import config
+
 client_file = tempfile.NamedTemporaryFile().name
-server_file = '/var/run/sysprobectld.sock'
+server_file = config.CONFIG_CTL_SOCKET_PATH
 
 event_enabled = int(sys.argv[1])
 
