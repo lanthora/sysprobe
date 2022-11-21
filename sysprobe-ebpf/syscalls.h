@@ -7,46 +7,25 @@
 #include "sysprobe-ebpf/types.h"
 #include "sysprobe-ebpf/vmlinux.h"
 
-/*
- * 结构体成员随机布局,没法直接根据 fd 拿到类型
- *
- * struct inode {
- *	umode_t	i_mode;
- * 	...
- * } __randomize_layout;
-*/
-
-static struct sock *fd_to_sock(unsigned int idx)
+static umode_t fd_i_mode(unsigned int idx, void **private_data)
 {
 	struct task_struct *task = (struct task_struct *)bpf_get_current_task();
 	struct fdtable *fdt = BPF_CORE_READ(task, files, fdt);
 
 	unsigned int max_fds = BPF_CORE_READ(fdt, max_fds);
 	if (idx > max_fds)
-		return NULL;
+		return 0;
 
 	struct file **fd = BPF_CORE_READ(fdt, fd);
 	struct file *file;
 	bpf_probe_read_kernel(&file, sizeof(file), fd + idx);
 
-	void *private_data = BPF_CORE_READ(file, private_data);
-	if (!private_data)
-		return NULL;
+	*private_data = BPF_CORE_READ(file, private_data);
+	if (!*private_data)
+		return 0;
 
-	// 从这里开始数据变得不严谨,尝试猜测 private_data 里放的是不是 socket
-	struct socket *socket = private_data;
-
-	void *verify_file = BPF_CORE_READ(socket, file);
-	// 双向指针校验,不满足的一定不是 socket
-	if (verify_file != file)
-		return NULL;
-
-	// 此时大概率为 socket, 再根据 type 过滤, 仅保留 SOCK_STREAM 和 SOCK_DGRAM
-	short int type = BPF_CORE_READ(socket, type);
-	if (type != SOCK_STREAM && type != SOCK_DGRAM)
-		return NULL;
-
-	return BPF_CORE_READ(socket, sk);
+	umode_t i_mode = BPF_CORE_READ(file, f_inode, i_mode);
+	return i_mode & S_IFMT;
 }
 
 static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
@@ -60,19 +39,25 @@ static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
 	size_t count = (size_t)ctx->args[2];
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
-	if (cfg && cfg->io_event_socket_enabled) {
-		struct sock *sock = fd_to_sock(fd);
-		if (sock) {
+
+	void *private_data;
+	umode_t i_mode = fd_i_mode(fd, &private_data);
+
+	switch (i_mode) {
+	case S_IFSOCK:
+		if (cfg && cfg->io_event_socket_enabled) {
 			LOG("socket read enter: tgid=%d pid=%d fd=%d, buf=%p count=%d", tgid, pid, fd, buf, count);
 			struct hook_ctx_key key = { .func = FUNC_SYSCALL_READ, .tgid = tgid, .pid = pid };
 			struct hook_ctx_value value = { .buf = buf };
 			bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
 			return 0;
 		}
-	}
-
-	if (cfg && cfg->io_event_others_enabled) {
-		LOG("others read enter: tgid=%d pid=%d fd=%d, buf=%p count=%d", tgid, pid, fd, buf, count);
+		break;
+	default:
+		if (cfg && cfg->io_event_others_enabled) {
+			LOG("others read enter: tgid=%d pid=%d fd=%d, buf=%p count=%d", tgid, pid, fd, buf, count);
+		}
+		break;
 	}
 
 	return 0;
@@ -117,19 +102,24 @@ static int try_sys_enter_write(struct trace_event_raw_sys_enter *ctx)
 	size_t count = (size_t)ctx->args[2];
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
-	if (cfg && cfg->io_event_socket_enabled) {
-		struct sock *sock = fd_to_sock(fd);
-		if (sock) {
+
+	void *private_data;
+	umode_t i_mode = fd_i_mode(fd, &private_data);
+
+	switch (i_mode) {
+	case S_IFSOCK:
+		if (cfg && cfg->io_event_socket_enabled) {
 			LOG("socket write enter: tgid=%d pid=%d fd=%d, buf=%p count=%d", tgid, pid, fd, buf, count);
 			struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITE, .tgid = tgid, .pid = pid };
 			struct hook_ctx_value value = { .buf = buf };
 			bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
 			return 0;
 		}
-	}
-
-	if (cfg && cfg->io_event_others_enabled) {
-		LOG("others write enter: tgid=%d pid=%d fd=%d, buf=%p count=%d", tgid, pid, fd, buf, count);
+	default:
+		if (cfg && cfg->io_event_others_enabled) {
+			LOG("others write enter: tgid=%d pid=%d fd=%d, buf=%p count=%d", tgid, pid, fd, buf, count);
+		}
+		break;
 	}
 
 	return 0;
