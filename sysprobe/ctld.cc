@@ -26,6 +26,22 @@ int ctld::handle_io_event_others(void *buffer, int len)
 	return 0;
 }
 
+int ctld::handle_io_event_socket(void *buffer, int len)
+{
+	assert(len == sizeof(struct ctl_io_event_socket));
+
+	struct ctl_io_event_socket *event = (struct ctl_io_event_socket *)buffer;
+	struct pproc_cfg cfg = {};
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
+
+	cfg.tgid = event->tgid;
+	cfg.io_event_socket_enabled = event->io_event_socket_enabled;
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
+
+	event->ret = 0;
+	return 0;
+}
+
 int ctld::handle_log(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_log));
@@ -78,6 +94,9 @@ int ctld::serve()
 			break;
 		case CTL_EVENT_LOG:
 			handle_log(buffer, size);
+			break;
+		case CTL_EVENT_IO_EVENT_SOCKET:
+			handle_io_event_socket(buffer, size);
 			break;
 		}
 		sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);

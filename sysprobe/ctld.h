@@ -11,6 +11,7 @@ class ctld {
     private:
 	int handle_io_event_others(void *buffer, int len);
 	int handle_log(void *buffer, int len);
+	int handle_io_event_socket(void *buffer, int len);
 
     private:
 	int init_socket_fd();

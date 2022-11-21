@@ -6,4 +6,7 @@
 	"python.formatting.autopep8Args": [
 		"--max-line-length=200"
 	],
+	"C_Cpp.default.includePath": [
+		"${workspaceFolder}"
+	],
 }

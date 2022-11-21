@@ -10,8 +10,14 @@
 #define CONFIG_LOG_LEN_MAX (1024)
 #endif
 
+// 对于每进程(pproc)变量,最多可能管理的进程数
 #ifndef CONFIG_PROCESS_NUMBER_MAX
 #define CONFIG_PROCESS_NUMBER_MAX (10240)
+#endif
+
+// 最多可能并发的线程数,用来在进入和退出的 hook 点之间传递数据
+#ifndef CONFIG_CONCURRENT_THREAD_MAX
+#define CONFIG_CONCURRENT_THREAD_MAX (10240)
 #endif
 
 #ifndef CONFIG_CTL_SOCKET_PATH

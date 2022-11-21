@@ -38,11 +38,11 @@ struct eproc {
 } __attribute__((__packed__));
 
 // 与单个进程相关的配置,至少一个功能与默认行为不一致时才会初始化,初始化时字段默认为 0,
-// io_event_socket_disabled, 默认表示不禁用 socket 的 io 事件上报
+// io_event_socket_enabled, 默认表示不启用 socket 的 io 事件上报
 // io_event_others_enabled, 默认表示不启用其他类型 io 事件上报
 struct pproc_cfg {
 	int tgid;
-	int io_event_socket_disabled;
+	int io_event_socket_enabled;
 	int io_event_others_enabled;
 } __attribute__((__packed__));
 
@@ -56,6 +56,8 @@ enum {
 	CTL_EVENT_UNSPEC,
 	CTL_EVENT_IO_EVENT_OTHERS,
 	CTL_EVENT_LOG,
+	CTL_EVENT_IO_EVENT_SOCKET,
+
 };
 
 struct ctl_io_event_others {
@@ -68,6 +70,13 @@ struct ctl_io_event_others {
 struct ctl_log {
 	unsigned int type; // always CTL_EVENT_LOG
 	int log_enabled;
+	int ret;
+} __attribute__((__packed__));
+
+struct ctl_io_event_socket {
+	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS
+	int tgid;
+	int io_event_socket_enabled;
 	int ret;
 } __attribute__((__packed__));
 
