@@ -9,9 +9,10 @@ class ctld {
 	int start(struct sysprobe *skel);
 
     private:
-	int handle_io_event_others(void *buffer, int len);
-	int handle_log(void *buffer, int len);
-	int handle_io_event_socket(void *buffer, int len);
+	int handle_log_enabled(void *buffer, int len);
+	int handle_pproc_enabled(void *buffer, int len);
+	int handle_io_event_others_enabled(void *buffer, int len);
+	int handle_io_event_socket_disabled(void *buffer, int len);
 
     private:
 	int init_socket_fd();

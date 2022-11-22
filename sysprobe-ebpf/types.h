@@ -2,6 +2,8 @@
 #ifndef SYSPROBE_EBPF_TYPES_H
 #define SYSPROBE_EBPF_TYPES_H
 
+#include "sysprobe-ebpf/vmlinux.h"
+
 // 在使用 uprobe 时,可能存在被 hook 函数潜逃被 hook 函数的情况.在这种情况下仅通过进程号协程号或者进程号协程号无法正确匹配函数.
 // 因此添加一个标记用来标识是哪个 hook 函数.
 // 拆分多个 map 也可以解决这个问题,但会降低代码的可读性,维护多个 map 也会带来更多的心智负担.
@@ -20,8 +22,10 @@ struct hook_ctx_key {
 } __attribute__((__packed__));
 
 struct hook_ctx_value {
+	unsigned int fd;
 	char *buf;
-
+	void *private_data;
+	umode_t i_mode;
 } __attribute__((__packed__));
 
 #define S_IFMT 00170000

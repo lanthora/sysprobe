@@ -10,15 +10,29 @@
 #include <thread>
 #include <unistd.h>
 
-int ctld::handle_io_event_others(void *buffer, int len)
+int ctld::handle_pproc_enabled(void *buffer, int len)
 {
-	assert(len == sizeof(struct ctl_io_event_others));
+	assert(len == sizeof(struct ctl_pproc_enabled));
 
-	struct ctl_io_event_others *event = (struct ctl_io_event_others *)buffer;
+	struct ctl_pproc_enabled *event = (struct ctl_pproc_enabled *)buffer;
 	struct pproc_cfg cfg = {};
 	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
 
-	cfg.tgid = event->tgid;
+	cfg.enabled = event->enabled;
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
+
+	event->ret = 0;
+	return 0;
+}
+
+int ctld::handle_io_event_others_enabled(void *buffer, int len)
+{
+	assert(len == sizeof(struct ctl_io_event_others_enabled));
+
+	struct ctl_io_event_others_enabled *event = (struct ctl_io_event_others_enabled *)buffer;
+	struct pproc_cfg cfg = {};
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
+
 	cfg.io_event_others_enabled = event->io_event_others_enabled;
 	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
 
@@ -26,27 +40,27 @@ int ctld::handle_io_event_others(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_io_event_socket(void *buffer, int len)
+int ctld::handle_io_event_socket_disabled(void *buffer, int len)
 {
-	assert(len == sizeof(struct ctl_io_event_socket));
+	assert(len == sizeof(struct ctl_io_event_socket_disabled));
 
-	struct ctl_io_event_socket *event = (struct ctl_io_event_socket *)buffer;
+	struct ctl_io_event_socket_disabled *event = (struct ctl_io_event_socket_disabled *)buffer;
 	struct pproc_cfg cfg = {};
 	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
 
-	cfg.tgid = event->tgid;
-	cfg.io_event_socket_enabled = event->io_event_socket_enabled;
+	cfg.io_event_socket_disabled = event->io_event_socket_disabled;
 	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
 }
 
-int ctld::handle_log(void *buffer, int len)
+int ctld::handle_log_enabled(void *buffer, int len)
 {
-	assert(len == sizeof(struct ctl_log));
+	assert(len == sizeof(struct ctl_log_enabled));
 
-	struct ctl_log *event = (struct ctl_log *)buffer;
+	struct ctl_log_enabled *event = (struct ctl_log_enabled *)buffer;
+
 	int k0 = 0;
 	struct global_cfg cfg = {};
 	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg);
@@ -89,14 +103,17 @@ int ctld::serve()
 		type = CTL_EVENT_UNSPEC;
 		memcpy(&type, buffer, CTL_TYPE_LEN);
 		switch (type) {
-		case CTL_EVENT_IO_EVENT_OTHERS:
-			handle_io_event_others(buffer, size);
+		case CTL_EVENT_LOG_ENABLED:
+			handle_log_enabled(buffer, size);
 			break;
-		case CTL_EVENT_LOG:
-			handle_log(buffer, size);
+		case CTL_EVENT_PPROC_ENABLED:
+			handle_pproc_enabled(buffer, size);
 			break;
-		case CTL_EVENT_IO_EVENT_SOCKET:
-			handle_io_event_socket(buffer, size);
+		case CTL_EVENT_IO_EVENT_OTHERS_ENABLED:
+			handle_io_event_others_enabled(buffer, size);
+			break;
+		case CTL_EVENT_IO_EVENT_SOCKET_DISABLED:
+			handle_io_event_socket_disabled(buffer, size);
 			break;
 		}
 		sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);

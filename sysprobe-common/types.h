@@ -38,11 +38,12 @@ struct eproc {
 } __attribute__((__packed__));
 
 // 与单个进程相关的配置,至少一个功能与默认行为不一致时才会初始化,初始化时字段默认为 0,
-// io_event_socket_enabled, 默认表示不启用 socket 的 io 事件上报
+// io_event_socket_disabled, 默认表示不禁用 socket 的 io 事件上报
 // io_event_others_enabled, 默认表示不启用其他类型 io 事件上报
 struct pproc_cfg {
-	int tgid;
-	int io_event_socket_enabled;
+	int enabled;
+	int io_event_socket_disabled;
+	int io_event_regular_disabled;
 	int io_event_others_enabled;
 } __attribute__((__packed__));
 
@@ -54,29 +55,36 @@ struct global_cfg {
 // sysprobe-ctl 请求响应的事件
 enum {
 	CTL_EVENT_UNSPEC,
-	CTL_EVENT_IO_EVENT_OTHERS,
-	CTL_EVENT_LOG,
-	CTL_EVENT_IO_EVENT_SOCKET,
-
+	CTL_EVENT_IO_EVENT_OTHERS_ENABLED,
+	CTL_EVENT_LOG_ENABLED,
+	CTL_EVENT_IO_EVENT_SOCKET_DISABLED,
+	CTL_EVENT_PPROC_ENABLED,
 };
 
-struct ctl_io_event_others {
-	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS
+struct ctl_io_event_others_enabled {
+	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS_ENABLED
 	int tgid;
 	int io_event_others_enabled;
 	int ret;
 } __attribute__((__packed__));
 
-struct ctl_log {
-	unsigned int type; // always CTL_EVENT_LOG
+struct ctl_log_enabled {
+	unsigned int type; // always CTL_EVENT_LOG_ENABLED
 	int log_enabled;
 	int ret;
 } __attribute__((__packed__));
 
-struct ctl_io_event_socket {
-	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS
+struct ctl_io_event_socket_disabled {
+	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS_ENABLED
 	int tgid;
-	int io_event_socket_enabled;
+	int io_event_socket_disabled;
+	int ret;
+} __attribute__((__packed__));
+
+struct ctl_pproc_enabled {
+	unsigned int type; // always CTL_EVENT_PPROC_ENABLED
+	int tgid;
+	int enabled;
 	int ret;
 } __attribute__((__packed__));
 
