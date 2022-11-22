@@ -33,9 +33,9 @@ static void *file_to_private_data(struct file *file)
 	return BPF_CORE_READ(file, private_data);
 }
 
-static struct qstr *file_to_d_name(struct file *file)
+static struct qstr file_to_d_name(struct file *file)
 {
-	return NULL;
+	return BPF_CORE_READ(file, f_path.dentry, d_name);
 }
 
 static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
@@ -58,6 +58,7 @@ static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
 
 	void *private_data = file_to_private_data(file);
 	umode_t i_mode = file_to_i_mode(file);
+	struct qstr d_name = file_to_d_name(file);
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_READ, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value value = { .fd = fd, .buf = buf, .private_data = private_data, .i_mode = i_mode };
@@ -65,16 +66,21 @@ static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
 
 	switch (i_mode) {
 	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled)
+		if (!cfg->io_event_socket_disabled) {
 			LOG("socket read enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
+		}
 		break;
 	case S_IFREG:
-		if (!cfg->io_event_regular_disabled)
-			LOG("reg read enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
+		if (!cfg->io_event_regular_disabled) {
+			char name[CONFIG_FILE_NAME_LEN_MAX] = { 0 };
+			bpf_probe_read_kernel(name, sizeof(name) - 1, d_name.name);
+			LOG("reg read enter: tgid=%d pid=%d fd=%d count=%d name=%s", tgid, pid, fd, count, name);
+		}
 		break;
 	default:
-		if (cfg->io_event_others_enabled)
+		if (cfg->io_event_others_enabled) {
 			LOG("others read enter: tgid=%d pid=%d fd=%d i_mode=%d", tgid, pid, fd, i_mode);
+		}
 		break;
 	}
 
@@ -101,16 +107,19 @@ static int try_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 
 	switch (value->i_mode) {
 	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled)
+		if (!cfg->io_event_socket_disabled) {
 			LOG("socket read exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
+		}
 		break;
 	case S_IFREG:
-		if (!cfg->io_event_regular_disabled)
+		if (!cfg->io_event_regular_disabled) {
 			LOG("reg read exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
+		}
 		break;
 	default:
-		if (cfg->io_event_others_enabled)
+		if (cfg->io_event_others_enabled) {
 			LOG("others read exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
+		}
 		break;
 	}
 
@@ -139,6 +148,7 @@ static int try_sys_enter_write(struct trace_event_raw_sys_enter *ctx)
 
 	void *private_data = file_to_private_data(file);
 	umode_t i_mode = file_to_i_mode(file);
+	struct qstr d_name = file_to_d_name(file);
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITE, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value value = { .fd = fd, .buf = buf, .private_data = private_data, .i_mode = i_mode };
@@ -146,16 +156,21 @@ static int try_sys_enter_write(struct trace_event_raw_sys_enter *ctx)
 
 	switch (i_mode) {
 	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled)
+		if (!cfg->io_event_socket_disabled) {
 			LOG("socket write enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
+		}
 		break;
 	case S_IFREG:
-		if (!cfg->io_event_regular_disabled)
-			LOG("reg write enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
+		if (!cfg->io_event_regular_disabled) {
+			char name[CONFIG_FILE_NAME_LEN_MAX] = { 0 };
+			bpf_probe_read_kernel(name, sizeof(name) - 1, d_name.name);
+			LOG("reg write enter: tgid=%d pid=%d fd=%d count=%d name=%s", tgid, pid, fd, count, name);
+		}
 		break;
 	default:
-		if (cfg->io_event_others_enabled)
+		if (cfg->io_event_others_enabled) {
 			LOG("others write enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
+		}
 		break;
 	}
 
@@ -182,16 +197,19 @@ static int try_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
 
 	switch (value->i_mode) {
 	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled)
+		if (!cfg->io_event_socket_disabled) {
 			LOG("socket write exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
+		}
 		break;
 	case S_IFREG:
-		if (!cfg->io_event_regular_disabled)
+		if (!cfg->io_event_regular_disabled) {
 			LOG("reg write exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
+		}
 		break;
 	default:
-		if (cfg->io_event_others_enabled)
+		if (cfg->io_event_others_enabled) {
 			LOG("others write exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
+		}
 		break;
 	}
 

@@ -32,4 +32,8 @@
 #define CONFIG_CTL_BUFFER_SIZE_MAX (1024)
 #endif
 
+#ifndef CONFIG_FILE_NAME_LEN_MAX
+#define CONFIG_FILE_NAME_LEN_MAX (64)
+#endif
+
 #endif
