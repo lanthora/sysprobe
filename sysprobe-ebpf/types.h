@@ -10,6 +10,7 @@
 enum {
 	FUNC_SYSCALL_READ,
 	FUNC_SYSCALL_WRITE,
+	FUNC_SYSCALL_FUTEX,
 };
 
 // 用于标记 hook 点上下文的 key,目前已知进程号,线程号,go 的协程号.未来有需要新增字段是直接添加.
@@ -47,4 +48,13 @@ struct hook_ctx_value {
 #define S_ISBLK(m) (((m)&S_IFMT) == S_IFBLK)
 #define S_ISFIFO(m) (((m)&S_IFMT) == S_IFIFO)
 #define S_ISSOCK(m) (((m)&S_IFMT) == S_IFSOCK)
+
+#define FUTEX_WAIT 0
+#define FUTEX_WAIT_BITSET 9
+#define FUTEX_WAIT_REQUEUE_PI 11
+
+#define FUTEX_PRIVATE_FLAG 128
+#define FUTEX_CLOCK_REALTIME 256
+#define FUTEX_CMD_MASK ~(FUTEX_PRIVATE_FLAG | FUTEX_CLOCK_REALTIME)
+
 #endif

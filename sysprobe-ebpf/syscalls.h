@@ -217,4 +217,77 @@ static int try_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
 	return 0;
 }
 
+static int try_sys_enter_futex(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	int futex_op = ctx->args[1] & FUTEX_CMD_MASK;
+
+	if (futex_op != FUTEX_WAIT && futex_op != FUTEX_WAIT_BITSET && futex_op != FUTEX_WAIT_REQUEUE_PI)
+		return 0;
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_FUTEX, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value value = {};
+	bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
+
+	LOG("futex enter: tgid=%d pid=%d", tgid, pid);
+	return 0;
+}
+
+static int try_sys_exit_futex(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_FUTEX, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
+
+	if (!value)
+		return 0;
+
+	LOG("futex exit: tgid=%d pid=%d", tgid, pid);
+
+	bpf_map_delete_elem(&hook_ctx_map, &key);
+	return 0;
+}
+
+static int try_sys_enter_futex_waitv(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("futex_waitv enter: tgid=%d pid=%d", tgid, pid);
+	return 0;
+}
+
+static int try_sys_exit_futex_waitv(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("futex_waitv exit: tgid=%d pid=%d", tgid, pid);
+	return 0;
+}
+
 #endif

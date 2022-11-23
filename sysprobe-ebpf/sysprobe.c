@@ -27,6 +27,12 @@ int sys_enter(struct trace_event_raw_sys_enter *ctx)
 	case __NR_write:
 		try_sys_enter_write(ctx);
 		break;
+	case __NR_futex:
+		try_sys_enter_futex(ctx);
+		break;
+	case __NR_futex_waitv:
+		try_sys_enter_futex_waitv(ctx);
+		break;
 	}
 	return 0;
 }
@@ -40,6 +46,12 @@ int sys_exit(struct trace_event_raw_sys_exit *ctx)
 		break;
 	case __NR_write:
 		try_sys_exit_write(ctx);
+		break;
+	case __NR_futex:
+		try_sys_exit_futex(ctx);
+		break;
+	case __NR_futex_waitv:
+		try_sys_exit_futex_waitv(ctx);
 		break;
 	}
 	return 0;
