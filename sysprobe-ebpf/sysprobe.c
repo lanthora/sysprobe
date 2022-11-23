@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include "sysprobe-ebpf/sched.h"
 #include "sysprobe-ebpf/syscalls.h"
+#include <asm/unistd.h>
 
 char LICENSE[] SEC("license") = "GPL";
 
@@ -16,26 +17,30 @@ int sched_process_exit(struct trace_event_raw_sched_process_template *ctx)
 	return try_sched_process_exit(ctx);
 }
 
-SEC("tracepoint/syscalls/sys_enter_read")
-int sys_enter_read(struct trace_event_raw_sys_enter *ctx)
+SEC("tp/raw_syscalls/sys_enter")
+int sys_enter(struct trace_event_raw_sys_enter *ctx)
 {
-	return try_sys_enter_read(ctx);
+	switch (ctx->id) {
+	case __NR_read:
+		try_sys_enter_read(ctx);
+		break;
+	case __NR_write:
+		try_sys_enter_write(ctx);
+		break;
+	}
+	return 0;
 }
 
-SEC("tracepoint/syscalls/sys_exit_read")
-int sys_exit_read(struct trace_event_raw_sys_exit *ctx)
+SEC("tp/raw_syscalls/sys_exit")
+int sys_exit(struct trace_event_raw_sys_exit *ctx)
 {
-	return try_sys_exit_read(ctx);
-}
-
-SEC("tracepoint/syscalls/sys_enter_write")
-int sys_enter_write(struct trace_event_raw_sys_enter *ctx)
-{
-	return try_sys_enter_write(ctx);
-}
-
-SEC("tracepoint/syscalls/sys_exit_write")
-int sys_exit_write(struct trace_event_raw_sys_exit *ctx)
-{
-	return try_sys_exit_write(ctx);
+	switch (ctx->id) {
+	case __NR_read:
+		try_sys_exit_read(ctx);
+		break;
+	case __NR_write:
+		try_sys_exit_write(ctx);
+		break;
+	}
+	return 0;
 }
