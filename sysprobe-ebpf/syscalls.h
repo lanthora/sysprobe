@@ -38,7 +38,7 @@ static struct qstr file_to_d_name(struct file *file)
 	return BPF_CORE_READ(file, f_path.dentry, d_name);
 }
 
-static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
+static int trace_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
@@ -87,7 +87,7 @@ static int try_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
 	return 0;
 }
 
-static int try_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
+static int trace_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
@@ -128,7 +128,7 @@ static int try_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 	return 0;
 }
 
-static int try_sys_enter_write(struct trace_event_raw_sys_enter *ctx)
+static int trace_sys_enter_write(struct trace_event_raw_sys_enter *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
@@ -177,7 +177,7 @@ static int try_sys_enter_write(struct trace_event_raw_sys_enter *ctx)
 	return 0;
 }
 
-static int try_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
+static int trace_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
@@ -217,7 +217,7 @@ static int try_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
 	return 0;
 }
 
-static int try_sys_enter_futex(struct trace_event_raw_sys_enter *ctx)
+static int trace_sys_enter_futex(struct trace_event_raw_sys_enter *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
@@ -241,7 +241,7 @@ static int try_sys_enter_futex(struct trace_event_raw_sys_enter *ctx)
 	return 0;
 }
 
-static int try_sys_exit_futex(struct trace_event_raw_sys_exit *ctx)
+static int trace_sys_exit_futex(struct trace_event_raw_sys_exit *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
@@ -263,7 +263,7 @@ static int try_sys_exit_futex(struct trace_event_raw_sys_exit *ctx)
 	return 0;
 }
 
-static int try_sys_enter_futex_waitv(struct trace_event_raw_sys_enter *ctx)
+static int trace_sys_enter_futex_waitv(struct trace_event_raw_sys_enter *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
@@ -277,7 +277,7 @@ static int try_sys_enter_futex_waitv(struct trace_event_raw_sys_enter *ctx)
 	return 0;
 }
 
-static int try_sys_exit_futex_waitv(struct trace_event_raw_sys_exit *ctx)
+static int trace_sys_exit_futex_waitv(struct trace_event_raw_sys_exit *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);

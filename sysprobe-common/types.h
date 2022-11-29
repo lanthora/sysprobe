@@ -50,6 +50,7 @@ struct pproc_cfg {
 // 全局配置,成员表示方式与 pproc_cfg 一致
 struct global_cfg {
 	int log_enabled;
+	int kfree_skb_enabled;
 } __attribute__((__packed__));
 
 // sysprobe-ctl 请求响应的事件
@@ -59,6 +60,7 @@ enum {
 	CTL_EVENT_LOG_ENABLED,
 	CTL_EVENT_IO_EVENT_SOCKET_DISABLED,
 	CTL_EVENT_PPROC_ENABLED,
+	CTL_EVENT_KFREE_SKB_ENABLED,
 };
 
 struct ctl_io_event_others_enabled {
@@ -71,6 +73,12 @@ struct ctl_io_event_others_enabled {
 struct ctl_log_enabled {
 	unsigned int type; // always CTL_EVENT_LOG_ENABLED
 	int log_enabled;
+	int ret;
+} __attribute__((__packed__));
+
+struct ctl_kfree_skb_enabled {
+	unsigned int type; // always CTL_EVENT_KFREE_SKB_ENABLED
+	int kfree_skb_enabled;
 	int ret;
 } __attribute__((__packed__));
 
