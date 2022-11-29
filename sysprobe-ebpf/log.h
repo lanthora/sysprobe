@@ -27,7 +27,7 @@
 #define LOG(fmt, args...)                                                                                              \
 	{                                                                                                              \
 		int k0__ = 0;                                                                                          \
-		struct global_cfg *cfg__ = bpf_map_lookup_elem(&global_cfg_map, &k0__);                                \
+		struct global_cfg *cfg__ = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &k0__);           \
 		if (cfg__ && cfg__->log_enabled) {                                                                     \
 			LOG__(fmt, args);                                                                              \
 		}                                                                                                      \

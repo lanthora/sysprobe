@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
+#include "sysprobe-ebpf/kprobe.h"
 #include "sysprobe-ebpf/sched.h"
 #include "sysprobe-ebpf/syscalls.h"
+#include "sysprobe-ebpf/vmlinux.h"
 #include <asm/unistd.h>
 
 char LICENSE[] SEC("license") = "GPL";
@@ -55,4 +57,16 @@ int sys_exit(struct trace_event_raw_sys_exit *ctx)
 		break;
 	}
 	return 0;
+}
+
+SEC("kprobe/kfree_skb_reason")
+int BPF_KPROBE(enter_kfree_skb_reason, struct sk_buff *skb, enum skb_drop_reason reason)
+{
+	return try_enter_kfree_skb_reason(skb, reason);
+}
+
+SEC("kretprobe/kfree_skb_reason")
+int BPF_KRETPROBE(exit_kfree_skb_reason)
+{
+	return try_exit_kfree_skb_reason();
 }
