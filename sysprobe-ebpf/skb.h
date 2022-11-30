@@ -25,16 +25,16 @@ static int trace_kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 	if (!cfg || !cfg->kfree_skb_enabled)
 		return 0;
 
-	if (ctx->reason == SKB_DROP_REASON_NOT_SPECIFIED)
-		return 0;
-
 	struct iphdr *iph = ip_hdr(ctx->skbaddr);
 	u8 protocol = BPF_CORE_READ(iph, protocol);
 
 	if (protocol != IPPROTO_ICMP && protocol != IPPROTO_TCP && protocol != IPPROTO_UDP)
 		return 0;
 
-	LOG("kfree_skb: protocol=%u reason=%d", protocol, ctx->reason);
+	u32 saddr = BPF_CORE_READ(iph, saddr);
+	u32 daddr = BPF_CORE_READ(iph, daddr);
+
+	LOG("kfree_skb: protocol=%u reason=%u saddr=%pI4 daddr=%pI4", protocol, ctx->reason, &saddr, &daddr);
 	return 0;
 }
 
