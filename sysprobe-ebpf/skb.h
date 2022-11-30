@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
-#ifndef SYSPROBE_EBPF_KPROBE_H
-#define SYSPROBE_EBPF_KPROBE_H
+#ifndef SYSPROBE_EBPF_SKB_H
+#define SYSPROBE_EBPF_SKB_H
 
 #include "sysprobe-ebpf/log.h"
 #include "sysprobe-ebpf/vmlinux.h"
