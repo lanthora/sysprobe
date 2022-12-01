@@ -51,6 +51,7 @@ struct pproc_cfg {
 struct global_cfg {
 	int log_enabled;
 	int kfree_skb_enabled;
+	int nf_hook_slow_enabled;
 } __attribute__((__packed__));
 
 // sysprobe-ctl 请求响应的事件
@@ -61,36 +62,43 @@ enum {
 	CTL_EVENT_IO_EVENT_SOCKET_DISABLED,
 	CTL_EVENT_PPROC_ENABLED,
 	CTL_EVENT_KFREE_SKB_ENABLED,
+	CTL_EVENT_NF_HOOK_SLOW_ENABLED,
 };
 
 struct ctl_io_event_others_enabled {
-	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS_ENABLED
+	unsigned int type /* = CTL_EVENT_IO_EVENT_OTHERS_ENABLED */;
 	int tgid;
 	int io_event_others_enabled;
 	int ret;
 } __attribute__((__packed__));
 
 struct ctl_log_enabled {
-	unsigned int type; // always CTL_EVENT_LOG_ENABLED
+	unsigned int type /* = CTL_EVENT_LOG_ENABLED */;
 	int log_enabled;
 	int ret;
 } __attribute__((__packed__));
 
 struct ctl_kfree_skb_enabled {
-	unsigned int type; // always CTL_EVENT_KFREE_SKB_ENABLED
+	unsigned int type /* = CTL_EVENT_KFREE_SKB_ENABLED */;
 	int kfree_skb_enabled;
 	int ret;
 } __attribute__((__packed__));
 
+struct ctl_nf_hook_slow_enabled {
+	unsigned int type /* = CTL_EVENT_NF_HOOK_SLOW_ENABLED */;
+	int nf_hook_slow_enabled;
+	int ret;
+} __attribute__((__packed__));
+
 struct ctl_io_event_socket_disabled {
-	unsigned int type; // always CTL_EVENT_IO_EVENT_OTHERS_ENABLED
+	unsigned int type /* = CTL_EVENT_IO_EVENT_OTHERS_ENABLED */;
 	int tgid;
 	int io_event_socket_disabled;
 	int ret;
 } __attribute__((__packed__));
 
 struct ctl_pproc_enabled {
-	unsigned int type; // always CTL_EVENT_PPROC_ENABLED
+	unsigned int type /* = CTL_EVENT_PPROC_ENABLED */;
 	int tgid;
 	int enabled;
 	int ret;

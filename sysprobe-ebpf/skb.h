@@ -34,7 +34,7 @@ static int trace_kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 	u32 saddr = BPF_CORE_READ(iph, saddr);
 	u32 daddr = BPF_CORE_READ(iph, daddr);
 
-	LOG("kfree_skb: protocol=%u reason=%u saddr=%pI4 daddr=%pI4", protocol, ctx->reason, &saddr, &daddr);
+	LOG("kfree_skb: reason=%u protocol=%u saddr=%pI4 daddr=%pI4", ctx->reason, protocol, &saddr, &daddr);
 	return 0;
 }
 

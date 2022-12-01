@@ -11,6 +11,7 @@ enum {
 	FUNC_SYSCALL_READ,
 	FUNC_SYSCALL_WRITE,
 	FUNC_SYSCALL_FUTEX,
+	FUNC_KP_NF_HOOK_SLOW,
 };
 
 // 用于标记 hook 点上下文的 key,目前已知进程号,线程号,go 的协程号.未来有需要新增字段是直接添加.
@@ -27,6 +28,7 @@ struct hook_ctx_value {
 	char *buf;
 	void *private_data;
 	umode_t i_mode;
+	struct sk_buff *skb;
 } __attribute__((__packed__));
 
 #define S_IFMT 00170000

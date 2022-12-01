@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
+#include "sysprobe-ebpf/kprobe.h"
 #include "sysprobe-ebpf/sched.h"
 #include "sysprobe-ebpf/skb.h"
 #include "sysprobe-ebpf/syscalls.h"
@@ -64,4 +65,17 @@ SEC("tp/skb/kfree_skb")
 int kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 {
 	return trace_kfree_skb(ctx);
+}
+
+SEC("kprobe/nf_hook_slow")
+int BPF_KPROBE(enter_nf_hook_slow, struct sk_buff *skb, struct nf_hook_state *state, const struct nf_hook_entries *e,
+	       unsigned int i)
+{
+	return trace_enter_nf_hook_slow(skb);
+}
+
+SEC("kretprobe/nf_hook_slow")
+int BPF_KRETPROBE(exit_nf_hook_slow, int ret)
+{
+	return trace_exit_nf_hook_slow(ret);
 }
