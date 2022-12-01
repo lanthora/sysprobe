@@ -3,6 +3,7 @@
 #include "sysprobe-ebpf/sched.h"
 #include "sysprobe-ebpf/skb.h"
 #include "sysprobe-ebpf/syscalls.h"
+#include "sysprobe-ebpf/tcp.h"
 #include "sysprobe-ebpf/vmlinux.h"
 #include <asm/unistd.h>
 
@@ -84,4 +85,10 @@ SEC("kretprobe/nf_hook_slow")
 int BPF_KRETPROBE(exit_nf_hook_slow, int ret)
 {
 	return trace_exit_nf_hook_slow(ret);
+}
+
+SEC("tp/tcp/tcp_probe")
+int tcp_probe(struct trace_event_raw_tcp_probe *ctx)
+{
+	return trace_tcp_probe(ctx);
 }
