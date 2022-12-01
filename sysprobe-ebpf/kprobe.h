@@ -10,8 +10,8 @@
 
 static int trace_enter_nf_hook_slow(struct sk_buff *skb)
 {
-	int k0 = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &k0);
+	int zero = 0;
+	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->nf_hook_slow_enabled)
 		return 0;
 
@@ -25,8 +25,8 @@ static int trace_enter_nf_hook_slow(struct sk_buff *skb)
 
 static int trace_exit_nf_hook_slow(int ret)
 {
-	int k0 = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &k0);
+	int zero = 0;
+	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->nf_hook_slow_enabled)
 		return 0;
 

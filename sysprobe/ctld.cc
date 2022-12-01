@@ -61,12 +61,12 @@ int ctld::handle_log_enabled(void *buffer, int len)
 
 	struct ctl_log_enabled *event = (struct ctl_log_enabled *)buffer;
 
-	int k0 = 0;
+	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.log_enabled = event->log_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -78,12 +78,12 @@ int ctld::handle_kfree_skb_enabled(void *buffer, int len)
 
 	struct ctl_kfree_skb_enabled *event = (struct ctl_kfree_skb_enabled *)buffer;
 
-	int k0 = 0;
+	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.kfree_skb_enabled = event->kfree_skb_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -95,12 +95,12 @@ int ctld::handle_nf_hook_slow_enabled(void *buffer, int len)
 
 	struct ctl_nf_hook_slow_enabled *event = (struct ctl_nf_hook_slow_enabled *)buffer;
 
-	int k0 = 0;
+	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.nf_hook_slow_enabled = event->nf_hook_slow_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &k0, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;

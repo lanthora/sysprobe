@@ -52,6 +52,7 @@ struct global_cfg {
 	int log_enabled;
 	int kfree_skb_enabled;
 	int nf_hook_slow_enabled;
+	int sched_enabled;
 } __attribute__((__packed__));
 
 // sysprobe-ctl 请求响应的事件

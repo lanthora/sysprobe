@@ -20,8 +20,8 @@ static inline struct iphdr *ip_hdr(const struct sk_buff *skb)
 
 static int trace_kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 {
-	int k0 = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &k0);
+	int zero = 0;
+	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->kfree_skb_enabled)
 		return 0;
 
