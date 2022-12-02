@@ -5,6 +5,9 @@
 #include "sysprobe-ebpf/log.h"
 #include "sysprobe-ebpf/vmlinux.h"
 
+static const int AF_INET = 2;
+static const int AF_INET6 = 10;
+
 static int trace_ipv4_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
 	struct in_addr *saddr = &((struct sockaddr_in *)&ctx->saddr)->sin_addr;
@@ -28,9 +31,6 @@ static int trace_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 
-	static const int AF_INET = 2;
-	static const int AF_INET6 = 10;
-
 	switch (ctx->family) {
 	case AF_INET:
 		trace_ipv4_tcp_probe(ctx);
@@ -42,6 +42,66 @@ static int trace_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 		break;
 	}
 
+	return 0;
+}
+
+static int trace_tcp_retransmit_skb(struct trace_event_raw_tcp_event_sk_skb *ctx)
+{
+	switch (ctx->family) {
+	case AF_INET:
+		LOG("tcp_retransmit_skb: saddr=%pI4.%u daddr=%pI4.%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
+		break;
+	case AF_INET6:
+		LOG("tcp_retransmit_skb: saddr=%pI6.%u daddr=%pI6.%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
+static int trace_tcp_retransmit_synack(struct trace_event_raw_tcp_retransmit_synack *ctx)
+{
+	switch (ctx->family) {
+	case AF_INET:
+		LOG("tcp_retransmit_synack: saddr=%pI4.%u daddr=%pI4.%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
+		break;
+	case AF_INET6:
+		LOG("tcp_retransmit_synack: saddr=%pI6.%u daddr=%pI6.%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
+static int trace_tcp_send_reset(struct trace_event_raw_tcp_event_sk_skb *ctx)
+{
+	switch (ctx->family) {
+	case AF_INET:
+		LOG("tcp_send_reset: saddr=%pI4.%u daddr=%pI4.%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
+		break;
+	case AF_INET6:
+		LOG("tcp_send_reset: saddr=%pI6.%u daddr=%pI6.%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
+static int trace_tcp_receive_reset(struct trace_event_raw_tcp_event_sk *ctx)
+{
+	switch (ctx->family) {
+	case AF_INET:
+		LOG("tcp_receive_reset: saddr=%pI4.%u daddr=%pI4.%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
+		break;
+	case AF_INET6:
+		LOG("tcp_receive_reset: saddr=%pI6.%u daddr=%pI6.%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
+		break;
+	default:
+		break;
+	}
 	return 0;
 }
 

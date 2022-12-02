@@ -229,8 +229,8 @@ static int trace_sys_enter_futex(struct trace_event_raw_sys_enter *ctx)
 
 	int futex_op = ctx->args[1] & FUTEX_CMD_MASK;
 
-	if (futex_op != FUTEX_WAIT && futex_op != FUTEX_WAIT_BITSET && futex_op != FUTEX_WAIT_REQUEUE_PI &&
-	    futex_op != FUTEX_LOCK_PI && futex_op != FUTEX_LOCK_PI2)
+	if (futex_op != FUTEX_WAIT && futex_op != FUTEX_WAIT_BITSET && futex_op != FUTEX_WAIT_REQUEUE_PI && futex_op != FUTEX_LOCK_PI &&
+	    futex_op != FUTEX_LOCK_PI2)
 		return 0;
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_FUTEX, .tgid = tgid, .pid = pid };

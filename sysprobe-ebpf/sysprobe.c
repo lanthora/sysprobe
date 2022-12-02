@@ -67,7 +67,6 @@ int sys_exit(struct trace_event_raw_sys_exit *ctx)
 	return 0;
 }
 
-// https://github.com/torvalds/linux/commit/c504e5c2f9648a1e5c2be01e8c3f59d394192bd3
 SEC("tp/skb/kfree_skb")
 int kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 {
@@ -75,8 +74,7 @@ int kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 }
 
 SEC("kprobe/nf_hook_slow")
-int BPF_KPROBE(enter_nf_hook_slow, struct sk_buff *skb, struct nf_hook_state *state, const struct nf_hook_entries *e,
-	       unsigned int i)
+int BPF_KPROBE(enter_nf_hook_slow, struct sk_buff *skb, struct nf_hook_state *state, const struct nf_hook_entries *e, unsigned int i)
 {
 	return trace_enter_nf_hook_slow(skb);
 }
@@ -91,4 +89,28 @@ SEC("tp/tcp/tcp_probe")
 int tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
 	return trace_tcp_probe(ctx);
+}
+
+SEC("tp/tcp/tcp_retransmit_skb")
+int tcp_retransmit_skb(struct trace_event_raw_tcp_event_sk_skb *ctx)
+{
+	return trace_tcp_retransmit_skb(ctx);
+}
+
+SEC("tp/tcp/tcp_retransmit_synack")
+int tcp_retransmit_synack(struct trace_event_raw_tcp_retransmit_synack *ctx)
+{
+	return trace_tcp_retransmit_synack(ctx);
+}
+
+SEC("tp/tcp/tcp_send_reset")
+int tcp_send_reset(struct trace_event_raw_tcp_event_sk_skb *ctx)
+{
+	return trace_tcp_send_reset(ctx);
+}
+
+SEC("tp/tcp/tcp_receive_reset")
+int tcp_receive_reset(struct trace_event_raw_tcp_event_sk *ctx)
+{
+	return trace_tcp_receive_reset(ctx);
 }
