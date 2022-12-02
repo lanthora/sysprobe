@@ -15,6 +15,8 @@ class ctld {
 	int handle_io_event_socket_disabled(void *buffer, int len);
 	int handle_kfree_skb_enabled(void *buffer, int len);
 	int handle_nf_hook_slow_enabled(void *buffer, int len);
+	int handle_sched_enabled(void *buffer, int len);
+	int handle_tcp_probe_enabled(void *buffer, int len);
 
     private:
 	int init_socket_fd();

@@ -23,12 +23,13 @@ static int trace_ipv6_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 
 static int trace_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
+	int zero = 0;
+	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	if (!cfg || !cfg->tcp_probe_enabled)
+		return 0;
+
 	static const int AF_INET = 2;
 	static const int AF_INET6 = 10;
-	static const int SRTT_THRESHOLD = 10000;
-
-	if (ctx->srtt < SRTT_THRESHOLD)
-		return 0;
 
 	switch (ctx->family) {
 	case AF_INET:

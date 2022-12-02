@@ -106,6 +106,40 @@ int ctld::handle_nf_hook_slow_enabled(void *buffer, int len)
 	return 0;
 }
 
+int ctld::handle_sched_enabled(void *buffer, int len)
+{
+	assert(len == sizeof(struct ctl_sched_enabled));
+
+	struct ctl_sched_enabled *event = (struct ctl_sched_enabled *)buffer;
+
+	int zero = 0;
+	struct global_cfg cfg = {};
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
+
+	cfg.sched_enabled = event->sched_enabled;
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
+
+	event->ret = 0;
+	return 0;
+}
+
+int ctld::handle_tcp_probe_enabled(void *buffer, int len)
+{
+	assert(len == sizeof(struct ctl_tcp_probe_enabled));
+
+	struct ctl_tcp_probe_enabled *event = (struct ctl_tcp_probe_enabled *)buffer;
+
+	int zero = 0;
+	struct global_cfg cfg = {};
+	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
+
+	cfg.tcp_probe_enabled = event->tcp_probe_enabled;
+	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
+
+	event->ret = 0;
+	return 0;
+}
+
 int ctld::init_socket_fd()
 {
 	socket_fd_ = socket(AF_UNIX, SOCK_DGRAM, 0);
@@ -154,6 +188,12 @@ int ctld::serve()
 			break;
 		case CTL_EVENT_NF_HOOK_SLOW_ENABLED:
 			handle_nf_hook_slow_enabled(buffer, size);
+			break;
+		case CTL_EVENT_SCHED_ENABLED:
+			handle_sched_enabled(buffer, size);
+			break;
+		case CTL_EVENT_TCP_PROBE_ENABLED:
+			handle_tcp_probe_enabled(buffer, size);
 			break;
 		}
 		sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);

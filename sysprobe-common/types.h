@@ -18,25 +18,6 @@ struct elog {
 	char msg[CONFIG_LOG_LEN_MAX];
 } __attribute__((__packed__));
 
-struct eproc {
-	// RB_EVENT_PROC
-	unsigned int type;
-	unsigned long long nsec;
-	// 0: 保留
-	// 1: 进程创建
-	// 2: 进程退出
-	int tracepoint;
-	union {
-		// 进程退出时的进程号
-		int pid;
-		// 进程创建时的父进程号
-		int parent_pid;
-	};
-	// 进程创建时的子进程号
-	int child_pid;
-
-} __attribute__((__packed__));
-
 // 与单个进程相关的配置,至少一个功能与默认行为不一致时才会初始化,初始化时字段默认为 0,
 // io_event_socket_disabled, 默认表示不禁用 socket 的 io 事件上报
 // io_event_others_enabled, 默认表示不启用其他类型 io 事件上报
@@ -53,6 +34,7 @@ struct global_cfg {
 	int kfree_skb_enabled;
 	int nf_hook_slow_enabled;
 	int sched_enabled;
+	int tcp_probe_enabled;
 } __attribute__((__packed__));
 
 // sysprobe-ctl 请求响应的事件
@@ -64,6 +46,8 @@ enum {
 	CTL_EVENT_PPROC_ENABLED,
 	CTL_EVENT_KFREE_SKB_ENABLED,
 	CTL_EVENT_NF_HOOK_SLOW_ENABLED,
+	CTL_EVENT_SCHED_ENABLED,
+	CTL_EVENT_TCP_PROBE_ENABLED,
 };
 
 struct ctl_io_event_others_enabled {
@@ -88,6 +72,18 @@ struct ctl_kfree_skb_enabled {
 struct ctl_nf_hook_slow_enabled {
 	unsigned int type /* = CTL_EVENT_NF_HOOK_SLOW_ENABLED */;
 	int nf_hook_slow_enabled;
+	int ret;
+} __attribute__((__packed__));
+
+struct ctl_sched_enabled {
+	unsigned int type /* = CTL_EVENT_SCHED_ENABLED */;
+	int sched_enabled;
+	int ret;
+} __attribute__((__packed__));
+
+struct ctl_tcp_probe_enabled {
+	unsigned int type /* = CTL_EVENT_TCP_PROBE_ENABLED */;
+	int tcp_probe_enabled;
 	int ret;
 } __attribute__((__packed__));
 
