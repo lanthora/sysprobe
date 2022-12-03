@@ -12,7 +12,7 @@ static int trace_ipv4_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
 	struct in_addr *saddr = &((struct sockaddr_in *)&ctx->saddr)->sin_addr;
 	struct in_addr *daddr = &((struct sockaddr_in *)&ctx->daddr)->sin_addr;
-	LOG("tcp_probe: saddr=%pI4.%u daddr=%pI4.%u srtt=%d", saddr, ctx->sport, daddr, ctx->dport, ctx->srtt);
+	LOG("tcp_probe: saddr=%pI4:%u daddr=%pI4:%u srtt=%d", saddr, ctx->sport, daddr, ctx->dport, ctx->srtt);
 	return 0;
 }
 
@@ -20,7 +20,7 @@ static int trace_ipv6_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
 	struct in6_addr *saddr = &((struct sockaddr_in6 *)&ctx->saddr)->sin6_addr;
 	struct in6_addr *daddr = &((struct sockaddr_in6 *)&ctx->daddr)->sin6_addr;
-	LOG("tcp_probe: saddr=%pI6.%u daddr=%pI6.%u srtt=%d", saddr, ctx->sport, daddr, ctx->dport, ctx->srtt);
+	LOG("tcp_probe: saddr=[%pI6]:%u daddr=[%pI6]:%u srtt=%d", saddr, ctx->sport, daddr, ctx->dport, ctx->srtt);
 	return 0;
 }
 
@@ -64,10 +64,10 @@ static int trace_tcp_retransmit_synack(struct trace_event_raw_tcp_retransmit_syn
 {
 	switch (ctx->family) {
 	case AF_INET:
-		LOG("tcp_retransmit_synack: saddr=%pI4.%u daddr=%pI4.%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
+		LOG("tcp_retransmit_synack: saddr=%pI4:%u daddr=%pI4:%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
 		break;
 	case AF_INET6:
-		LOG("tcp_retransmit_synack: saddr=%pI6.%u daddr=%pI6.%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
+		LOG("tcp_retransmit_synack: saddr=[%pI6]:%u daddr=[%pI6]:%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
 		break;
 	default:
 		break;
@@ -79,10 +79,10 @@ static int trace_tcp_send_reset(struct trace_event_raw_tcp_event_sk_skb *ctx)
 {
 	switch (ctx->family) {
 	case AF_INET:
-		LOG("tcp_send_reset: saddr=%pI4.%u daddr=%pI4.%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
+		LOG("tcp_send_reset: saddr=%pI4:%u daddr=%pI4:%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
 		break;
 	case AF_INET6:
-		LOG("tcp_send_reset: saddr=%pI6.%u daddr=%pI6.%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
+		LOG("tcp_send_reset: saddr=[%pI6]:%u daddr=[%pI6]:%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
 		break;
 	default:
 		break;
@@ -94,10 +94,10 @@ static int trace_tcp_receive_reset(struct trace_event_raw_tcp_event_sk *ctx)
 {
 	switch (ctx->family) {
 	case AF_INET:
-		LOG("tcp_receive_reset: saddr=%pI4.%u daddr=%pI4.%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
+		LOG("tcp_receive_reset: saddr=%pI4:%u daddr=%pI4:%u", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport);
 		break;
 	case AF_INET6:
-		LOG("tcp_receive_reset: saddr=%pI6.%u daddr=%pI6.%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
+		LOG("tcp_receive_reset: saddr=[%pI6]:%u daddr=[%pI6]:%u", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport);
 		break;
 	default:
 		break;
