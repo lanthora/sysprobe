@@ -31,6 +31,19 @@ struct hook_ctx_value {
 	struct sk_buff *skb;
 } __attribute__((__packed__));
 
+// tcp probe 产生的数据量过大,根据 sock_cookie 生成一些指标后间隔一段时间上报.
+struct tcp_probe_key {
+	u64 sock_cookie;
+} __attribute__((__packed__));
+
+struct tcp_probe_value {
+	u64 last_submit_timestamp;
+	u64 srtt_min;
+	u64 srtt_max;
+	u64 srtt_sum;
+	u64 srtt_count;
+} __attribute__((__packed__));
+
 #define S_IFMT 00170000
 #define S_IFSOCK 0140000
 #define S_IFLNK 0120000

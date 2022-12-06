@@ -114,3 +114,9 @@ int tcp_receive_reset(struct trace_event_raw_tcp_event_sk *ctx)
 {
 	return trace_tcp_receive_reset(ctx);
 }
+
+SEC("tp/tcp/tcp_destroy_sock")
+int tcp_destroy_sock(struct trace_event_raw_tcp_event_sk *ctx)
+{
+	return trace_tcp_destroy_sock(ctx);
+}

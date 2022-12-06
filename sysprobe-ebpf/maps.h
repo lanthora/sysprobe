@@ -34,4 +34,11 @@ struct {
 	__type(value, struct hook_ctx_value);
 } hook_ctx_map SEC(".maps");
 
+struct {
+	__uint(type, BPF_MAP_TYPE_HASH);
+	__uint(max_entries, CONFIG_SOCK_NUM_MAX);
+	__type(key, struct tcp_probe_key);
+	__type(value, struct tcp_probe_value);
+} tcp_probe_map SEC(".maps");
+
 #endif

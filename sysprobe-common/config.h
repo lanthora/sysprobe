@@ -36,4 +36,8 @@
 #define CONFIG_FILE_NAME_LEN_MAX (64)
 #endif
 
+#ifndef CONFIG_SOCK_NUM_MAX
+#define CONFIG_SOCK_NUM_MAX (10240)
+#endif
+
 #endif
