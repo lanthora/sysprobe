@@ -40,32 +40,34 @@ static bool update_srtt_statistics(struct trace_event_raw_tcp_probe *ctx, struct
 
 static int trace_ipv4_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
-	struct tcp_probe_value value = {};
-	if (update_srtt_statistics(ctx, &value)) {
-		struct in_addr *saddr = &((struct sockaddr_in *)&ctx->saddr)->sin_addr;
-		struct in_addr *daddr = &((struct sockaddr_in *)&ctx->daddr)->sin_addr;
-		u64 max = value.srtt_max;
-		u64 min = value.srtt_min;
-		u64 avg = value.srtt_sum / value.srtt_count;
-		LOG("tcp_probe: saddr=%pI4:%u daddr=%pI4:%u srtt=(%u,%u,%u)", saddr, ctx->sport, daddr, ctx->dport, min, avg, max);
-	}
+	struct tcp_probe_value value;
+	if (!update_srtt_statistics(ctx, &value))
+		return 0;
 
+	u64 max = value.srtt_max;
+	u64 min = value.srtt_min;
+	u64 avg = value.srtt_sum / value.srtt_count;
+
+	struct in_addr *saddr = &((struct sockaddr_in *)&ctx->saddr)->sin_addr;
+	struct in_addr *daddr = &((struct sockaddr_in *)&ctx->daddr)->sin_addr;
+
+	LOG("tcp_probe: saddr=%pI4:%u daddr=%pI4:%u srtt=(%u,%u,%u)", saddr, ctx->sport, daddr, ctx->dport, min, avg, max);
 	return 0;
 }
 
 static int trace_ipv6_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
-	struct tcp_probe_value value = {};
-	if (update_srtt_statistics(ctx, &value)) {
-		u64 max = value.srtt_max;
-		u64 min = value.srtt_min;
-		u64 avg = value.srtt_sum / value.srtt_count;
+	struct tcp_probe_value value;
+	if (!update_srtt_statistics(ctx, &value))
+		return 0;
 
-		struct in6_addr *saddr = &((struct sockaddr_in6 *)&ctx->saddr)->sin6_addr;
-		struct in6_addr *daddr = &((struct sockaddr_in6 *)&ctx->daddr)->sin6_addr;
-		LOG("tcp_probe: saddr=[%pI6]:%u daddr=[%pI6]:%u srtt=(%u,%u,%u)", saddr, ctx->sport, daddr, ctx->dport, min, avg, max);
-	}
+	u64 max = value.srtt_max;
+	u64 min = value.srtt_min;
+	u64 avg = value.srtt_sum / value.srtt_count;
 
+	struct in6_addr *saddr = &((struct sockaddr_in6 *)&ctx->saddr)->sin6_addr;
+	struct in6_addr *daddr = &((struct sockaddr_in6 *)&ctx->daddr)->sin6_addr;
+	LOG("tcp_probe: saddr=[%pI6]:%u daddr=[%pI6]:%u srtt=(%u,%u,%u)", saddr, ctx->sport, daddr, ctx->dport, min, avg, max);
 	return 0;
 }
 
@@ -90,6 +92,22 @@ static int trace_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 	return 0;
 }
 
+static bool final_srtt_statistics(struct trace_event_raw_tcp_event_sk *ctx, struct tcp_probe_value *updated)
+{
+	struct tcp_probe_key key = { .sock_cookie = ctx->sock_cookie };
+	struct tcp_probe_value *value = bpf_map_lookup_elem(&tcp_probe_map, &key);
+	if (!value)
+		return false;
+
+	updated->last_submit_timestamp = value->last_submit_timestamp;
+	updated->srtt_count = value->srtt_count;
+	updated->srtt_max = value->srtt_max;
+	updated->srtt_min = value->srtt_min;
+	updated->srtt_sum = value->srtt_sum;
+	bpf_map_delete_elem(&tcp_probe_map, &key);
+	return true;
+}
+
 static int trace_tcp_destroy_sock(struct trace_event_raw_tcp_event_sk *ctx)
 {
 	int zero = 0;
@@ -97,26 +115,26 @@ static int trace_tcp_destroy_sock(struct trace_event_raw_tcp_event_sk *ctx)
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 
-	struct tcp_probe_key key = { .sock_cookie = ctx->sock_cookie };
-	struct tcp_probe_value *value = bpf_map_lookup_elem(&tcp_probe_map, &key);
-	if (value) {
-		u64 max = value->srtt_max;
-		u64 min = value->srtt_min;
-		u64 avg = value->srtt_sum / value->srtt_count;
-		switch (ctx->family) {
-		case AF_INET:
-			LOG("tcp_destroy_sock: saddr=%pI4:%u daddr=%pI4:%u srtt=(%u,%u,%u)", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport, min,
-			    avg, max);
-			break;
-		case AF_INET6:
-			LOG("tcp_destroy_sock: saddr=[%pI6]:%u daddr=[%pI6]:%u srtt=(%u,%u,%u)", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6,
-			    ctx->dport, min, avg, max);
-			break;
-		default:
-			break;
-		}
+	struct tcp_probe_value value;
+	u64 min = 0, avg = 0, max = 0;
+	if (final_srtt_statistics(ctx, &value)) {
+		max = value.srtt_max;
+		min = value.srtt_min;
+		avg = value.srtt_sum / value.srtt_count;
 	}
-	bpf_map_delete_elem(&tcp_probe_map, &key);
+
+	switch (ctx->family) {
+	case AF_INET:
+		LOG("tcp_destroy_sock: saddr=%pI4:%u daddr=%pI4:%u srtt=(%u,%u,%u)", &ctx->saddr, ctx->sport, &ctx->daddr, ctx->dport, min, avg, max);
+		break;
+	case AF_INET6:
+		LOG("tcp_destroy_sock: saddr=[%pI6]:%u daddr=[%pI6]:%u srtt=(%u,%u,%u)", &ctx->saddr_v6, ctx->sport, &ctx->daddr_v6, ctx->dport, min,
+		    avg, max);
+		break;
+	default:
+		break;
+	}
+
 	return 0;
 }
 
