@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-#include "sysprobe/ctld.h"
+#include "sysprobe/control.h"
 #include "errno.h"
 #include "sysprobe-common/types.h"
 #include "sysprobe/sysprobe.skel.h"
@@ -10,7 +10,7 @@
 #include <thread>
 #include <unistd.h>
 
-int ctld::handle_pproc_enabled(void *buffer, int len)
+int control::handle_pproc_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_pproc_enabled));
 
@@ -25,7 +25,7 @@ int ctld::handle_pproc_enabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_io_event_others_enabled(void *buffer, int len)
+int control::handle_io_event_others_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_io_event_others_enabled));
 
@@ -40,7 +40,7 @@ int ctld::handle_io_event_others_enabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_io_event_socket_disabled(void *buffer, int len)
+int control::handle_io_event_socket_disabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_io_event_socket_disabled));
 
@@ -55,7 +55,7 @@ int ctld::handle_io_event_socket_disabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_log_enabled(void *buffer, int len)
+int control::handle_log_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_log_enabled));
 
@@ -72,7 +72,7 @@ int ctld::handle_log_enabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_kfree_skb_enabled(void *buffer, int len)
+int control::handle_kfree_skb_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_kfree_skb_enabled));
 
@@ -89,7 +89,7 @@ int ctld::handle_kfree_skb_enabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_nf_hook_slow_enabled(void *buffer, int len)
+int control::handle_nf_hook_slow_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_nf_hook_slow_enabled));
 
@@ -106,7 +106,7 @@ int ctld::handle_nf_hook_slow_enabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_sched_enabled(void *buffer, int len)
+int control::handle_sched_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_sched_enabled));
 
@@ -123,7 +123,7 @@ int ctld::handle_sched_enabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::handle_tcp_probe_enabled(void *buffer, int len)
+int control::handle_tcp_probe_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_tcp_probe_enabled));
 
@@ -140,7 +140,7 @@ int ctld::handle_tcp_probe_enabled(void *buffer, int len)
 	return 0;
 }
 
-int ctld::init_socket_fd()
+int control::init_socket_fd()
 {
 	socket_fd_ = socket(AF_UNIX, SOCK_DGRAM, 0);
 	assert(socket_fd_ != 0);
@@ -154,7 +154,7 @@ int ctld::init_socket_fd()
 	return 0;
 }
 
-int ctld::serve()
+int control::serve()
 {
 	static const int CTL_TYPE_LEN = 4;
 	char buffer[CONFIG_CTL_BUFFER_SIZE_MAX + 1];
@@ -202,7 +202,7 @@ int ctld::serve()
 	return size;
 }
 
-int ctld::start(struct sysprobe *skel)
+int control::start(struct sysprobe *skel)
 {
 	int ret;
 

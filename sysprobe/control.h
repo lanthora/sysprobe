@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-#ifndef SYSPROBE_CTLD_H
-#define SYSPROBE_CTLD_H
+#ifndef SYSPROBE_CONTROL_H
+#define SYSPROBE_CONTROL_H
 
 #include <sys/un.h>
 
-class ctld {
+class control {
     public:
 	int start(struct sysprobe *skel);
 

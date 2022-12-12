@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-#include "sysprobe/handler.h"
+#include "sysprobe/callback.h"
 #include "sysprobe-common/types.h"
-#include "sysprobe/handler.h"
 #include <csignal>
 #include <cstdio>
 #include <cstring>
@@ -9,27 +8,6 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/un.h>
-
-static int fd;
-static struct sockaddr_un addr;
-
-static void handle_signal(int sig)
-{
-	std::cout << strsignal(sig) << std::endl;
-}
-
-int init_handler()
-{
-	signal(SIGINT, handle_signal);
-	signal(SIGTERM, handle_signal);
-	fd = socket(PF_UNIX, SOCK_DGRAM, 0);
-	if (fd == -1)
-		return -errno;
-
-	addr.sun_family = AF_UNIX;
-	strcpy(addr.sun_path, CONFIG_DATA_SOCKET_PATH);
-	return 0;
-}
 
 // 根据系统启动时间和内核记录的纳秒时间戳计算事件产生的时间
 static int clock_get_event_time(unsigned long long nsec, struct timespec *now)
@@ -66,9 +44,14 @@ static int handle_log_event(void *ctx, void *data, size_t len)
 	return 0;
 }
 
-int handle_event(void *ctx, void *data, size_t len)
+int ring_buffer_callback(void *ctx, void *data, size_t len)
 {
 	unsigned int type = RB_EVENT_UNSPEC;
+	static const int fd = socket(PF_UNIX, SOCK_DGRAM, 0);
+	static const struct sockaddr_un addr = {
+		.sun_family = AF_UNIX,
+		.sun_path = CONFIG_DATA_SOCKET_PATH,
+	};
 
 	if (len >= sizeof(unsigned int))
 		type = *(unsigned int *)data;

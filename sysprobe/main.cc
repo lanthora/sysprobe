@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
-#include "sysprobe/ctld.h"
-#include "sysprobe/handler.h"
+#include "sysprobe/callback.h"
+#include "sysprobe/control.h"
 #include "sysprobe/sysprobe.skel.h"
+#include <csignal>
+#include <cstdio>
+#include <iostream>
+
+static void handle_signal(int sig)
+{
+	std::cout << strsignal(sig) << std::endl;
+}
 
 int main()
 {
 	int retval = 0;
 	struct sysprobe *skel = NULL;
 	struct ring_buffer *rb = NULL;
-	ctld ctl;
+	control ctrl;
 
-	retval = init_handler();
-	if (retval)
-		goto out;
+	signal(SIGINT, handle_signal);
+	signal(SIGTERM, handle_signal);
 
 	skel = sysprobe__open_and_load();
 	if (!skel)
@@ -22,11 +29,11 @@ int main()
 	if (retval)
 		goto destory;
 
-	retval = ctl.start(skel);
+	retval = ctrl.start(skel);
 	if (retval)
 		goto detach;
 
-	rb = ring_buffer__new(bpf_map__fd(skel->maps.ringbuf), handle_event, NULL, NULL);
+	rb = ring_buffer__new(bpf_map__fd(skel->maps.ringbuf), ring_buffer_callback, NULL, NULL);
 	if (!rb)
 		goto detach;
 
@@ -40,5 +47,6 @@ detach:
 destory:
 	sysprobe__destroy(skel);
 out:
+	std::cout << "Exit" << std::endl;
 	return 0;
 }

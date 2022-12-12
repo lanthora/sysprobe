@@ -8,12 +8,10 @@
 enum {
 	RB_EVENT_UNSPEC,
 	RB_EVENT_LOG,
-	RB_EVENT_PROC,
 };
 
 struct elog {
-	// RB_EVENT_LOG
-	unsigned int type;
+	unsigned int type /* = RB_EVENT_LOG */;
 	unsigned long long nsec;
 	char msg[CONFIG_LOG_LEN_MAX];
 } __attribute__((__packed__));
@@ -37,7 +35,6 @@ struct global_cfg {
 	int tcp_probe_enabled;
 } __attribute__((__packed__));
 
-// sysprobe-ctl 请求响应的事件
 enum {
 	CTL_EVENT_UNSPEC,
 	CTL_EVENT_IO_EVENT_OTHERS_ENABLED,
