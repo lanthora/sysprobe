@@ -6,6 +6,7 @@
 #include "sysprobe-ebpf/maps.h"
 #include "sysprobe-ebpf/types.h"
 #include "sysprobe-ebpf/vmlinux.h"
+#include <asm/unistd.h>
 
 static struct file *fd_to_file(unsigned int idx)
 {
@@ -288,6 +289,300 @@ static int trace_sys_exit_futex_waitv(struct trace_event_raw_sys_exit *ctx)
 		return 0;
 
 	LOG("futex_waitv exit: tgid=%d pid=%d", tgid, pid);
+	return 0;
+}
+
+static int trace_sys_enter_readv(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_readv");
+	return 0;
+}
+
+static int trace_sys_exit_readv(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_readv");
+	return 0;
+}
+
+static int trace_sys_enter_writev(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_writev");
+	return 0;
+}
+
+static int trace_sys_exit_writev(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_writev");
+	return 0;
+}
+
+static int trace_sys_enter_recvfrom(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_recvfrom");
+	return 0;
+}
+
+static int trace_sys_exit_recvfrom(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_recvfrom");
+	return 0;
+}
+
+static int trace_sys_enter_recvmsg(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_recvmsg");
+	return 0;
+}
+
+static int trace_sys_exit_recvmsg(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_recvmsg");
+	return 0;
+}
+
+static int trace_sys_enter_recvmmsg(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_recvmmsg");
+	return 0;
+}
+
+static int trace_sys_exit_recvmmsg(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_recvmmsg");
+	return 0;
+}
+
+static int trace_sys_enter_sendto(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_sendto");
+	return 0;
+}
+
+static int trace_sys_exit_sendto(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_sendto");
+	return 0;
+}
+
+static int trace_sys_enter_sendmsg(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_sendmsg");
+	return 0;
+}
+
+static int trace_sys_exit_sendmsg(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_sendmsg");
+	return 0;
+}
+
+static int trace_sys_enter_sendmmsg(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_sendmmsg");
+	return 0;
+}
+
+static int trace_sys_exit_sendmmsg(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_exit_sendmmsg");
+	return 0;
+}
+
+static int trace_sys_enter(struct trace_event_raw_sys_enter *ctx)
+{
+	switch (ctx->id) {
+	case __NR_read:
+		trace_sys_enter_read(ctx);
+		break;
+	case __NR_write:
+		trace_sys_enter_write(ctx);
+		break;
+	case __NR_futex:
+		trace_sys_enter_futex(ctx);
+		break;
+	case __NR_futex_waitv:
+		trace_sys_enter_futex_waitv(ctx);
+		break;
+	case __NR_readv:
+		trace_sys_enter_readv(ctx);
+		break;
+	case __NR_writev:
+		trace_sys_enter_writev(ctx);
+		break;
+	case __NR_recvfrom:
+		trace_sys_enter_recvfrom(ctx);
+		break;
+	case __NR_recvmsg:
+		trace_sys_enter_recvmsg(ctx);
+		break;
+	case __NR_recvmmsg:
+		trace_sys_enter_recvmmsg(ctx);
+		break;
+	case __NR_sendto:
+		trace_sys_enter_sendto(ctx);
+		break;
+	case __NR_sendmsg:
+		trace_sys_enter_sendmsg(ctx);
+		break;
+	case __NR_sendmmsg:
+		trace_sys_enter_sendmmsg(ctx);
+		break;
+	}
+	return 0;
+}
+
+static int trace_sys_exit(struct trace_event_raw_sys_exit *ctx)
+{
+	switch (ctx->id) {
+	case __NR_read:
+		trace_sys_exit_read(ctx);
+		break;
+	case __NR_write:
+		trace_sys_exit_write(ctx);
+		break;
+	case __NR_futex:
+		trace_sys_exit_futex(ctx);
+		break;
+	case __NR_futex_waitv:
+		trace_sys_exit_futex_waitv(ctx);
+		break;
+	case __NR_recvfrom:
+		trace_sys_exit_recvfrom(ctx);
+		break;
+	case __NR_readv:
+		trace_sys_exit_readv(ctx);
+		break;
+	case __NR_writev:
+		trace_sys_exit_writev(ctx);
+		break;
+	case __NR_recvmsg:
+		trace_sys_exit_recvmsg(ctx);
+		break;
+	case __NR_recvmmsg:
+		trace_sys_exit_recvmmsg(ctx);
+		break;
+	case __NR_sendto:
+		trace_sys_exit_sendto(ctx);
+		break;
+	case __NR_sendmsg:
+		trace_sys_exit_sendmsg(ctx);
+		break;
+	case __NR_sendmmsg:
+		trace_sys_exit_sendmmsg(ctx);
+		break;
+	}
 	return 0;
 }
 

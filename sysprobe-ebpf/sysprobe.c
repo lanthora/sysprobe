@@ -5,7 +5,6 @@
 #include "sysprobe-ebpf/syscalls.h"
 #include "sysprobe-ebpf/tcp.h"
 #include "sysprobe-ebpf/vmlinux.h"
-#include <asm/unistd.h>
 
 char LICENSE[] SEC("license") = "GPL";
 
@@ -30,41 +29,13 @@ int sched_process_exit(struct trace_event_raw_sched_process_template *ctx)
 SEC("tp/raw_syscalls/sys_enter")
 int sys_enter(struct trace_event_raw_sys_enter *ctx)
 {
-	switch (ctx->id) {
-	case __NR_read:
-		trace_sys_enter_read(ctx);
-		break;
-	case __NR_write:
-		trace_sys_enter_write(ctx);
-		break;
-	case __NR_futex:
-		trace_sys_enter_futex(ctx);
-		break;
-	case __NR_futex_waitv:
-		trace_sys_enter_futex_waitv(ctx);
-		break;
-	}
-	return 0;
+	return trace_sys_enter(ctx);
 }
 
 SEC("tp/raw_syscalls/sys_exit")
 int sys_exit(struct trace_event_raw_sys_exit *ctx)
 {
-	switch (ctx->id) {
-	case __NR_read:
-		trace_sys_exit_read(ctx);
-		break;
-	case __NR_write:
-		trace_sys_exit_write(ctx);
-		break;
-	case __NR_futex:
-		trace_sys_exit_futex(ctx);
-		break;
-	case __NR_futex_waitv:
-		trace_sys_exit_futex_waitv(ctx);
-		break;
-	}
-	return 0;
+	return trace_sys_exit(ctx);
 }
 
 SEC("tp/skb/kfree_skb")
