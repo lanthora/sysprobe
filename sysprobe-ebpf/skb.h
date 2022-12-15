@@ -51,7 +51,7 @@ static int trace_ipv6_kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 static int trace_kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->kfree_skb_enabled)
 		return 0;
 

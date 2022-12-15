@@ -101,7 +101,7 @@ static int trace_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 		return 0;
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_READ, .tgid = tgid, .pid = pid };
-	struct hook_ctx_value *value = (struct hook_ctx_value *)bpf_map_lookup_elem(&hook_ctx_map, &key);
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
 	if (!value)
 		return 0;
@@ -191,7 +191,7 @@ static int trace_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
 		return 0;
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITE, .tgid = tgid, .pid = pid };
-	struct hook_ctx_value *value = (struct hook_ctx_value *)bpf_map_lookup_elem(&hook_ctx_map, &key);
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
 	if (!value)
 		return 0;
@@ -253,7 +253,7 @@ static int trace_sys_exit_futex(struct trace_event_raw_sys_exit *ctx)
 		return 0;
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_FUTEX, .tgid = tgid, .pid = pid };
-	struct hook_ctx_value *value = (struct hook_ctx_value *)bpf_map_lookup_elem(&hook_ctx_map, &key);
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
 	if (!value)
 		return 0;

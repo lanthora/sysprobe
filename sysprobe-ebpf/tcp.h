@@ -74,7 +74,7 @@ static int trace_ipv6_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 static int trace_tcp_probe(struct trace_event_raw_tcp_probe *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 
@@ -111,7 +111,7 @@ static bool final_srtt_statistics(struct trace_event_raw_tcp_event_sk *ctx, stru
 static int trace_tcp_destroy_sock(struct trace_event_raw_tcp_event_sk *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 
@@ -141,7 +141,7 @@ static int trace_tcp_destroy_sock(struct trace_event_raw_tcp_event_sk *ctx)
 static int trace_tcp_retransmit_skb(struct trace_event_raw_tcp_event_sk_skb *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 
@@ -161,7 +161,7 @@ static int trace_tcp_retransmit_skb(struct trace_event_raw_tcp_event_sk_skb *ctx
 static int trace_tcp_retransmit_synack(struct trace_event_raw_tcp_retransmit_synack *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 
@@ -181,7 +181,7 @@ static int trace_tcp_retransmit_synack(struct trace_event_raw_tcp_retransmit_syn
 static int trace_tcp_send_reset(struct trace_event_raw_tcp_event_sk_skb *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 
@@ -201,7 +201,7 @@ static int trace_tcp_send_reset(struct trace_event_raw_tcp_event_sk_skb *ctx)
 static int trace_tcp_receive_reset(struct trace_event_raw_tcp_event_sk *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->tcp_probe_enabled)
 		return 0;
 

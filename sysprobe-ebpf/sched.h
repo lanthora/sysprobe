@@ -8,7 +8,7 @@
 static int trace_sched_process_fork(struct trace_event_raw_sched_process_fork *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->sched_enabled)
 		return 0;
 
@@ -22,7 +22,7 @@ static int trace_sched_process_fork(struct trace_event_raw_sched_process_fork *c
 static int trace_sched_process_exec(struct trace_event_raw_sched_process_exec *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->sched_enabled)
 		return 0;
 
@@ -37,7 +37,7 @@ static int trace_sched_process_exec(struct trace_event_raw_sched_process_exec *c
 static int trace_sched_process_exit(struct trace_event_raw_sched_process_template *ctx)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->sched_enabled)
 		return 0;
 

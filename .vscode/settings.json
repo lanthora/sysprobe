@@ -9,4 +9,5 @@
 	"C_Cpp.default.includePath": [
 		"${workspaceFolder}"
 	],
+	"C_Cpp.errorSquiggles": "disabled",
 }

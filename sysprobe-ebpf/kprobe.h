@@ -12,7 +12,7 @@
 static int trace_enter_nf_hook_slow(struct sk_buff *skb)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->nf_hook_slow_enabled)
 		return 0;
 
@@ -27,12 +27,12 @@ static int trace_enter_nf_hook_slow(struct sk_buff *skb)
 static int trace_exit_nf_hook_slow(int ret)
 {
 	int zero = 0;
-	struct global_cfg *cfg = (struct global_cfg *)bpf_map_lookup_elem(&global_cfg_map, &zero);
+	struct global_cfg *cfg = bpf_map_lookup_elem(&global_cfg_map, &zero);
 	if (!cfg || !cfg->nf_hook_slow_enabled)
 		return 0;
 
 	struct hook_ctx_key key = { .func = FUNC_KP_NF_HOOK_SLOW };
-	struct hook_ctx_value *value = (struct hook_ctx_value *)bpf_map_lookup_elem(&hook_ctx_map, &key);
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
 	static const int EPERM = 1;
 
