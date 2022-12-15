@@ -22,7 +22,6 @@
 			}                                                                                                                            \
 		}                                                                                                                                    \
 	}
-#endif
 
 #define LOG(fmt, args...)                                                                                                                            \
 	{                                                                                                                                            \
@@ -32,3 +31,5 @@
 			LOG__(fmt, args);                                                                                                            \
 		}                                                                                                                                    \
 	}
+
+#endif
