@@ -29,14 +29,66 @@ static umode_t file_to_i_mode(struct file *file)
 	return BPF_CORE_READ(file, f_inode, i_mode) & S_IFMT;
 }
 
-static void *file_to_private_data(struct file *file)
+static struct socket *file_to_private_data(struct file *file)
 {
-	return BPF_CORE_READ(file, private_data);
+	return (struct socket *)BPF_CORE_READ(file, private_data);
 }
 
-static struct qstr file_to_d_name(struct file *file)
+static inline struct qstr file_to_d_name(struct file *file)
 {
 	return BPF_CORE_READ(file, f_path.dentry, d_name);
+}
+
+static umode_t fd_to_i_mode(unsigned int idx)
+{
+	struct file *file = fd_to_file(idx);
+	return file_to_i_mode(file);
+}
+
+static struct socket *fd_to_socket(unsigned int idx)
+{
+	struct file *file = fd_to_file(idx);
+	return file_to_private_data(file);
+}
+
+static inline struct qstr fd_to_d_name(unsigned int idx)
+{
+	struct file *file = fd_to_file(idx);
+	return file_to_d_name(file);
+}
+
+static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *key, struct hook_ctx_value *value, int ret)
+{
+	if (!cfg || !key || !value)
+		return;
+
+	unsigned int func = key->func;
+	unsigned int tgid = key->tgid;
+	unsigned int pid = key->pid;
+	unsigned int fd = value->fd;
+	size_t count = value->count;
+	unsigned long long latency = bpf_ktime_get_boot_ns() - value->nsec;
+
+	umode_t i_mode = fd_to_i_mode(fd);
+
+	if (i_mode == S_IFSOCK && !cfg->io_event_socket_disabled) {
+		struct socket *socket = fd_to_socket(fd);
+		LOG("socket file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u", func, tgid, pid, fd, ret, latency);
+		return;
+	}
+
+	if (i_mode == S_IFREG && !cfg->io_event_regular_disabled) {
+		struct qstr d_name = fd_to_d_name(fd);
+		char name[CONFIG_FILE_NAME_LEN_MAX] = { 0 };
+		bpf_probe_read_kernel(name, sizeof(name) - 1, d_name.name);
+		LOG("regular file: func=%d tgid=%d pid=%d fd=%d name=%s ret=%d latency=%u", func, tgid, pid, fd, name, ret, latency);
+		return;
+	}
+
+	if (cfg->io_event_others_enabled) {
+		LOG("others file: func=%d tgid=%d pid=%d fd=%d i_mode=%d ret=%d latency=%u", func, tgid, pid, fd, i_mode, ret, latency);
+		return;
+	}
 }
 
 static int trace_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
@@ -45,45 +97,17 @@ static int trace_sys_enter_read(struct trace_event_raw_sys_enter *ctx)
 	u32 tgid = (u32)(pid_tgid >> 32);
 	u32 pid = (u32)pid_tgid;
 
-	unsigned int fd = (unsigned int)ctx->args[0];
-	char *buf = (char *)ctx->args[1];
-	size_t count = (size_t)ctx->args[2];
-
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
-	struct file *file = fd_to_file(fd);
-	if (!file)
-		return 0;
-
-	void *private_data = file_to_private_data(file);
-	umode_t i_mode = file_to_i_mode(file);
-	struct qstr d_name = file_to_d_name(file);
+	unsigned int fd = (unsigned int)ctx->args[0];
+	char *buf = (char *)ctx->args[1];
+	size_t count = (size_t)ctx->args[2];
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_READ, .tgid = tgid, .pid = pid };
-	struct hook_ctx_value value = { .fd = fd, .buf = buf, .private_data = private_data, .i_mode = i_mode };
+	struct hook_ctx_value value = { .fd = fd, .buf = buf, .count = count, .nsec = bpf_ktime_get_boot_ns() };
 	bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
-
-	switch (i_mode) {
-	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled) {
-			LOG("socket read enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
-		}
-		break;
-	case S_IFREG:
-		if (!cfg->io_event_regular_disabled) {
-			char name[CONFIG_FILE_NAME_LEN_MAX] = { 0 };
-			bpf_probe_read_kernel(name, sizeof(name) - 1, d_name.name);
-			LOG("reg read enter: tgid=%d pid=%d fd=%d count=%d name=%s", tgid, pid, fd, count, name);
-		}
-		break;
-	default:
-		if (cfg->io_event_others_enabled) {
-			LOG("others read enter: tgid=%d pid=%d fd=%d i_mode=%d", tgid, pid, fd, i_mode);
-		}
-		break;
-	}
 
 	return 0;
 }
@@ -94,35 +118,16 @@ static int trace_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 	u32 tgid = (u32)(pid_tgid >> 32);
 	u32 pid = (u32)pid_tgid;
 
-	int ret = (int)ctx->ret;
-
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
+	int ret = (int)ctx->ret;
+
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_READ, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	if (!value)
-		return 0;
-
-	switch (value->i_mode) {
-	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled) {
-			LOG("socket read exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
-		}
-		break;
-	case S_IFREG:
-		if (!cfg->io_event_regular_disabled) {
-			LOG("reg read exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
-		}
-		break;
-	default:
-		if (cfg->io_event_others_enabled) {
-			LOG("others read exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
-		}
-		break;
-	}
+	trace_io_event_common(cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
 
@@ -135,45 +140,17 @@ static int trace_sys_enter_write(struct trace_event_raw_sys_enter *ctx)
 	u32 tgid = (u32)(pid_tgid >> 32);
 	u32 pid = (u32)pid_tgid;
 
-	unsigned int fd = (unsigned int)ctx->args[0];
-	char *buf = (char *)ctx->args[1];
-	size_t count = (size_t)ctx->args[2];
-
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
-	struct file *file = fd_to_file(fd);
-	if (!file)
-		return 0;
-
-	void *private_data = file_to_private_data(file);
-	umode_t i_mode = file_to_i_mode(file);
-	struct qstr d_name = file_to_d_name(file);
+	unsigned int fd = (unsigned int)ctx->args[0];
+	char *buf = (char *)ctx->args[1];
+	size_t count = (size_t)ctx->args[2];
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITE, .tgid = tgid, .pid = pid };
-	struct hook_ctx_value value = { .fd = fd, .buf = buf, .private_data = private_data, .i_mode = i_mode };
+	struct hook_ctx_value value = { .fd = fd, .buf = buf, .count = count, .nsec = bpf_ktime_get_boot_ns() };
 	bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
-
-	switch (i_mode) {
-	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled) {
-			LOG("socket write enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
-		}
-		break;
-	case S_IFREG:
-		if (!cfg->io_event_regular_disabled) {
-			char name[CONFIG_FILE_NAME_LEN_MAX] = { 0 };
-			bpf_probe_read_kernel(name, sizeof(name) - 1, d_name.name);
-			LOG("reg write enter: tgid=%d pid=%d fd=%d count=%d name=%s", tgid, pid, fd, count, name);
-		}
-		break;
-	default:
-		if (cfg->io_event_others_enabled) {
-			LOG("others write enter: tgid=%d pid=%d fd=%d count=%d", tgid, pid, fd, count);
-		}
-		break;
-	}
 
 	return 0;
 }
@@ -184,37 +161,19 @@ static int trace_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
 	u32 tgid = (u32)(pid_tgid >> 32);
 	u32 pid = (u32)pid_tgid;
 
-	int ret = (int)ctx->ret;
-
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
+	int ret = (int)ctx->ret;
+
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITE, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	if (!value)
-		return 0;
-
-	switch (value->i_mode) {
-	case S_IFSOCK:
-		if (!cfg->io_event_socket_disabled) {
-			LOG("socket write exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
-		}
-		break;
-	case S_IFREG:
-		if (!cfg->io_event_regular_disabled) {
-			LOG("reg write exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
-		}
-		break;
-	default:
-		if (cfg->io_event_others_enabled) {
-			LOG("others write exit: tgid=%d pid=%d fd=%d ret=%d", tgid, pid, value->fd, ret);
-		}
-		break;
-	}
+	trace_io_event_common(cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
+
 	return 0;
 }
 
@@ -235,7 +194,7 @@ static int trace_sys_enter_futex(struct trace_event_raw_sys_enter *ctx)
 		return 0;
 
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_FUTEX, .tgid = tgid, .pid = pid };
-	struct hook_ctx_value value = {};
+	struct hook_ctx_value value = { .nsec = bpf_ktime_get_boot_ns() };
 	bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
 
 	LOG("futex enter: tgid=%d pid=%d", tgid, pid);
@@ -322,12 +281,19 @@ static int trace_sys_enter_writev(struct trace_event_raw_sys_enter *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
-	LOG("trace_sys_enter_writev");
+	unsigned int fd = (unsigned int)ctx->args[0];
+	struct iovec *iov = (struct iovec *)ctx->args[1];
+	int iovcnt = (int)ctx->args[2];
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITEV, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value value = { .fd = fd, .iov = iov, .iovcnt = iovcnt, .nsec = bpf_ktime_get_boot_ns() };
+	bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
 	return 0;
 }
 
@@ -335,12 +301,21 @@ static int trace_sys_exit_writev(struct trace_event_raw_sys_exit *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
-	LOG("trace_sys_exit_writev");
+	int ret = (int)ctx->ret;
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITEV, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
+
+	trace_io_event_common(cfg, &key, value, ret);
+
+	bpf_map_delete_elem(&hook_ctx_map, &key);
+
 	return 0;
 }
 
@@ -348,12 +323,20 @@ static int trace_sys_enter_recvfrom(struct trace_event_raw_sys_enter *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
-	LOG("trace_sys_enter_recvfrom");
+	unsigned int fd = (unsigned int)ctx->args[0];
+	char *buf = (char *)ctx->args[1];
+	size_t count = (size_t)ctx->args[2];
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_RECVFROM, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value value = { .fd = fd, .buf = buf, .count = count, .nsec = bpf_ktime_get_boot_ns() };
+	bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
+
 	return 0;
 }
 
@@ -361,12 +344,21 @@ static int trace_sys_exit_recvfrom(struct trace_event_raw_sys_exit *ctx)
 {
 	u64 pid_tgid = bpf_get_current_pid_tgid();
 	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
 
 	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
 	if (!cfg || !cfg->enabled)
 		return 0;
 
-	LOG("trace_sys_exit_recvfrom");
+	int ret = (int)ctx->ret;
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_RECVFROM, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
+
+	trace_io_event_common(cfg, &key, value, ret);
+
+	bpf_map_delete_elem(&hook_ctx_map, &key);
+
 	return 0;
 }
 

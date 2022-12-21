@@ -10,7 +10,16 @@
 enum {
 	FUNC_SYSCALL_READ,
 	FUNC_SYSCALL_WRITE,
+	FUNC_SYSCALL_READV,
+	FUNC_SYSCALL_WRITEV,
+	FUNC_SYSCALL_RECVFROM,
+	FUNC_SYSCALL_RECVMSG,
+	FUNC_SYSCALL_RECVMMSG,
+	FUNC_SYSCALL_SENDTO,
+	FUNC_SYSCALL_SENDMSG,
+	FUNC_SYSCALL_SENDMMSG,
 	FUNC_SYSCALL_FUTEX,
+	FUNC_SYSCALL_FUTEX_WAITV,
 	FUNC_KP_NF_HOOK_SLOW,
 };
 
@@ -26,9 +35,11 @@ struct hook_ctx_key {
 struct hook_ctx_value {
 	unsigned int fd;
 	char *buf;
-	void *private_data;
-	umode_t i_mode;
+	size_t count;
+	struct iovec *iov;
+	int iovcnt;
 	struct sk_buff *skb;
+	unsigned long long nsec;
 } __attribute__((__packed__));
 
 // tcp probe 产生的数据量过大,根据 sock_cookie 生成一些指标后间隔一段时间上报.
