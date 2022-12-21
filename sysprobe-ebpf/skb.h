@@ -55,10 +55,8 @@ static int trace_kfree_skb(struct trace_event_raw_kfree_skb *ctx)
 	if (!cfg || !cfg->kfree_skb_enabled)
 		return 0;
 
-	u8 version = 0;
 	struct iphdr *iph = ip_hdr(ctx->skbaddr);
-	bpf_probe_read_kernel(&version, sizeof(version), iph);
-	version >>= 4;
+	u8 version = BPF_CORE_READ_BITFIELD_PROBED(iph, version);
 
 	switch (version) {
 	case 4:
