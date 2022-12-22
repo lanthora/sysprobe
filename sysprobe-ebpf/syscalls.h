@@ -8,6 +8,8 @@
 #include "sysprobe-ebpf/vmlinux.h"
 #include <asm/unistd.h>
 
+#define ntohs(__x) (((__x & 0xff00) >> 8) | ((__x & 0x00ff) << 8))
+
 static struct file *fd_to_file(unsigned int idx)
 {
 	struct file *file = NULL;
@@ -73,7 +75,14 @@ static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *ke
 
 	if (i_mode == S_IFSOCK && !cfg->io_event_socket_disabled) {
 		struct socket *socket = fd_to_socket(fd);
-		LOG("socket file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u", func, tgid, pid, fd, ret, latency);
+		struct sock *sk = BPF_CORE_READ(socket, sk);
+		u32 local_addr = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
+		u32 remote_addr = BPF_CORE_READ(sk, __sk_common.skc_daddr);
+		u16 local_port = BPF_CORE_READ(sk, __sk_common.skc_num);
+		u16 remote_port = BPF_CORE_READ(sk, __sk_common.skc_dport);
+		remote_port = ntohs(remote_port);
+		LOG("socket file: func=%d tgid=%d pid=%d fd=%d ret=%d local=%pI4:%u remote=%pI4:%u latency=%u", func, tgid, pid, fd, ret, &local_addr,
+		    local_port, &remote_addr, remote_port, latency);
 		return;
 	}
 
