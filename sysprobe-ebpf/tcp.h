@@ -3,10 +3,8 @@
 #define SYSPROBE_EBPF_TCP_H
 
 #include "sysprobe-ebpf/log.h"
+#include "sysprobe-ebpf/types.h"
 #include "sysprobe-ebpf/vmlinux.h"
-
-static const int AF_INET = 2;
-static const int AF_INET6 = 10;
 
 static bool update_srtt_statistics(struct trace_event_raw_tcp_probe *ctx, struct tcp_probe_value *updated)
 {

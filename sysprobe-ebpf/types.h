@@ -34,10 +34,18 @@ struct hook_ctx_key {
 
 struct hook_ctx_value {
 	unsigned int fd;
+
 	char *buf;
-	size_t count;
 	struct iovec *iov;
+	struct msghdr *message;
+	struct mmsghdr *msgvec;
+
+	size_t count;
 	int iovcnt;
+	unsigned int vlen;
+
+	int flags;
+
 	struct sk_buff *skb;
 	unsigned long long nsec;
 } __attribute__((__packed__));
@@ -84,5 +92,9 @@ struct tcp_probe_value {
 #define FUTEX_PRIVATE_FLAG 128
 #define FUTEX_CLOCK_REALTIME 256
 #define FUTEX_CMD_MASK ~(FUTEX_PRIVATE_FLAG | FUTEX_CLOCK_REALTIME)
+
+#define AF_UNIX 1
+#define AF_INET 2
+#define AF_INET6 10
 
 #endif
