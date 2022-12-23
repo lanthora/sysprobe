@@ -8,28 +8,30 @@
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_tracing.h>
 
-#define LOG__(fmt, args...)                                                                                                                          \
+#define ___LOG(__fmt, __args...)                                                                                                                     \
 	{                                                                                                                                            \
-		struct elog *e__ = (struct elog *)bpf_ringbuf_reserve(&ringbuf, sizeof(struct elog), 0);                                             \
-		if (e__) {                                                                                                                           \
-			e__->type = RB_EVENT_LOG;                                                                                                    \
-			e__->nsec = bpf_ktime_get_boot_ns();                                                                                         \
-			int len = BPF_SNPRINTF(e__->msg, CONFIG_LOG_LEN_MAX, fmt, args);                                                             \
+		struct elog *__e = (struct elog *)bpf_ringbuf_reserve(&ringbuf, sizeof(struct elog), 0);                                             \
+		if (__e) {                                                                                                                           \
+			__e->type = RB_EVENT_LOG;                                                                                                    \
+			__e->nsec = bpf_ktime_get_boot_ns();                                                                                         \
+			int len = BPF_SNPRINTF(__e->msg, CONFIG_LOG_LEN_MAX, __fmt, __args);                                                         \
 			if (len > 0) {                                                                                                               \
-				bpf_ringbuf_submit(e__, 0);                                                                                          \
+				bpf_ringbuf_submit(__e, 0);                                                                                          \
 			} else {                                                                                                                     \
-				bpf_ringbuf_discard(e__, 0);                                                                                         \
+				bpf_ringbuf_discard(__e, 0);                                                                                         \
 			}                                                                                                                            \
 		}                                                                                                                                    \
 	}
 
-#define LOG(fmt, args...)                                                                                                                            \
+#define __LOG(__fmt, __args...)                                                                                                                      \
 	{                                                                                                                                            \
-		int zero__ = 0;                                                                                                                      \
-		struct global_cfg *cfg__ = bpf_map_lookup_elem(&global_cfg_map, &zero__);                                                            \
-		if (cfg__ && cfg__->log_enabled) {                                                                                                   \
-			LOG__(fmt, args);                                                                                                            \
+		int __zero = 0;                                                                                                                      \
+		struct global_cfg *__cfg = bpf_map_lookup_elem(&global_cfg_map, &__zero);                                                            \
+		if (__cfg && __cfg->log_enabled) {                                                                                                   \
+			___LOG(__fmt, __args);                                                                                                       \
 		}                                                                                                                                    \
 	}
+
+#define LOG __LOG
 
 #endif

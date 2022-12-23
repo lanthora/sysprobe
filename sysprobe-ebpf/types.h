@@ -63,6 +63,19 @@ struct tcp_probe_value {
 	u64 srtt_count;
 } __attribute__((__packed__));
 
+struct trace_key {
+	unsigned int tgid;
+	unsigned int pid;
+	unsigned long long goid;
+} __attribute__((__packed__));
+
+struct trace_value {
+	unsigned int fd;
+	u64 traceid;
+	unsigned long long nsec;
+	int state;
+} __attribute__((__packed__));
+
 #define S_IFMT 00170000
 #define S_IFSOCK 0140000
 #define S_IFLNK 0120000
@@ -96,5 +109,10 @@ struct tcp_probe_value {
 #define AF_UNIX 1
 #define AF_INET 2
 #define AF_INET6 10
+
+#define sk_rcv_saddr __sk_common.skc_rcv_saddr
+#define sk_daddr __sk_common.skc_daddr
+#define sk_num __sk_common.skc_num
+#define sk_dport __sk_common.skc_dport
 
 #endif

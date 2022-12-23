@@ -79,10 +79,10 @@ static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *ke
 		int family = BPF_CORE_READ(socket, ops, family);
 
 		if (family == AF_INET) {
-			u32 local_addr = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
-			u32 remote_addr = BPF_CORE_READ(sk, __sk_common.skc_daddr);
-			u16 local_port = BPF_CORE_READ(sk, __sk_common.skc_num);
-			u16 remote_port = BPF_CORE_READ(sk, __sk_common.skc_dport);
+			u32 local_addr = BPF_CORE_READ(sk, sk_rcv_saddr);
+			u32 remote_addr = BPF_CORE_READ(sk, sk_daddr);
+			u16 local_port = BPF_CORE_READ(sk, sk_num);
+			u16 remote_port = BPF_CORE_READ(sk, sk_dport);
 			remote_port = ntohs(remote_port);
 			LOG("socket file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u family=%u local=%pI4:%u remote=%pI4:%u", func, tgid, pid, fd,
 			    ret, latency, family, &local_addr, local_port, &remote_addr, remote_port);
