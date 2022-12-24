@@ -18,18 +18,3 @@ int function(void *ctx)
 }
 ```
 
-具体使用方法参考 [sysprobe.c](sysprobe.c)
-
-## 网络模拟
-
-清除模拟策略
-
-```txt
-tc qdisc del dev eth0 root netem
-```
-
-延时,乱序,丢包,重复,损坏
-
-```txt
-tc qdisc add dev eth0 root netem delay 100ms 20ms reorder 25% 10% loss 5% distribution normal duplicate 6% corrupt 7%
-```
