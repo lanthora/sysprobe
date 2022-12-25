@@ -63,19 +63,6 @@ struct tcp_probe_value {
 	u64 srtt_count;
 } __attribute__((__packed__));
 
-struct trace_key {
-	unsigned int tgid;
-	unsigned int pid;
-	unsigned long long goid;
-} __attribute__((__packed__));
-
-struct trace_value {
-	unsigned int fd;
-	u64 traceid;
-	unsigned long long nsec;
-	int state;
-} __attribute__((__packed__));
-
 #define S_IFMT 00170000
 #define S_IFSOCK 0140000
 #define S_IFLNK 0120000
