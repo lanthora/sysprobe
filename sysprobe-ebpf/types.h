@@ -20,7 +20,10 @@ enum {
 	FUNC_SYSCALL_SENDMMSG,
 	FUNC_SYSCALL_FUTEX,
 	FUNC_SYSCALL_FUTEX_WAITV,
+	FUNC_SYSCALL_SENDFILE,
+	FUNC_SYSCALL_CLOSE,
 	FUNC_KP_NF_HOOK_SLOW,
+	FUNC_MAX,
 };
 
 // 用于标记 hook 点上下文的 key,目前已知进程号,线程号,go 的协程号.未来有需要新增字段是直接添加.

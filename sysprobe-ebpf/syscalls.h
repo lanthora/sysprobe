@@ -7,7 +7,9 @@
 #include "sysprobe-ebpf/types.h"
 #include "sysprobe-ebpf/vmlinux.h"
 #include <asm/unistd.h>
+#include <bpf/bpf_core_read.h>
 #include <bpf/bpf_endian.h>
+#include <bpf/bpf_helpers.h>
 
 static struct file *fd_to_file(unsigned int idx)
 {
@@ -58,12 +60,11 @@ static inline struct qstr fd_to_d_name(unsigned int idx)
 	return file_to_d_name(file);
 }
 
-static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *key, struct hook_ctx_value *value, int ret)
+static void trace_io_event_common(char *label, struct pproc_cfg *cfg, struct hook_ctx_key *key, struct hook_ctx_value *value, int ret)
 {
 	if (!cfg || !key || !value)
 		return;
 
-	unsigned int func = key->func;
 	unsigned int tgid = key->tgid;
 	unsigned int pid = key->pid;
 	unsigned int fd = value->fd;
@@ -83,8 +84,8 @@ static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *ke
 			u16 local_port = BPF_CORE_READ(sk, sk_num);
 			u16 remote_port = BPF_CORE_READ(sk, sk_dport);
 			remote_port = bpf_ntohs(remote_port);
-			LOG("socket file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u family=%u local=%pI4:%u remote=%pI4:%u", func, tgid, pid, fd,
-			    ret, latency, family, &local_addr, local_port, &remote_addr, remote_port);
+			LOG("%s: tgid=%d pid=%d fd=%d ret=%d latency=%u family=%u local=%pI4:%u remote=%pI4:%u", label, tgid, pid, fd, ret, latency,
+			    family, &local_addr, local_port, &remote_addr, remote_port);
 		}
 
 		if (family == AF_INET6) {
@@ -93,7 +94,7 @@ static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *ke
 
 		if (family == AF_UNIX) {
 			// TODO: socket 文件的地址
-			LOG("socket file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u family=%u", func, tgid, pid, fd, ret, latency, family);
+			LOG("%s: tgid=%d pid=%d fd=%d ret=%d latency=%u family=%u", label, tgid, pid, fd, ret, latency, family);
 		}
 		return;
 	}
@@ -102,12 +103,12 @@ static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *ke
 		struct qstr d_name = fd_to_d_name(fd);
 		char name[CONFIG_FILE_NAME_LEN_MAX] = { 0 };
 		bpf_probe_read_kernel(name, sizeof(name) - 1, d_name.name);
-		LOG("regular file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u name=%s", func, tgid, pid, fd, ret, latency, name);
+		LOG("%s: tgid=%d pid=%d fd=%d ret=%d latency=%u file=%s", label, tgid, pid, fd, ret, latency, name);
 		return;
 	}
 
 	if (cfg->io_event_others_enabled) {
-		LOG("others file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u i_mode=%d", func, tgid, pid, fd, ret, latency, i_mode);
+		LOG("%s: tgid=%d pid=%d fd=%d ret=%d latency=%u i_mode=%d", label, tgid, pid, fd, ret, latency, i_mode);
 		return;
 	}
 }
@@ -147,7 +148,7 @@ static int trace_sys_exit_read(struct trace_event_raw_sys_exit *ctx)
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_READ, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	trace_io_event_common(cfg, &key, value, ret);
+	trace_io_event_common("read", cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
 	return 0;
@@ -188,7 +189,7 @@ static int trace_sys_exit_write(struct trace_event_raw_sys_exit *ctx)
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITE, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	trace_io_event_common(cfg, &key, value, ret);
+	trace_io_event_common("write", cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
 	return 0;
@@ -303,7 +304,7 @@ static int trace_sys_exit_readv(struct trace_event_raw_sys_exit *ctx)
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_READV, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	trace_io_event_common(cfg, &key, value, ret);
+	trace_io_event_common("readv", cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
 	return 0;
@@ -345,7 +346,7 @@ static int trace_sys_exit_writev(struct trace_event_raw_sys_exit *ctx)
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_WRITEV, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	trace_io_event_common(cfg, &key, value, ret);
+	trace_io_event_common("writev", cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
 	return 0;
@@ -386,7 +387,7 @@ static int trace_sys_exit_recvfrom(struct trace_event_raw_sys_exit *ctx)
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_RECVFROM, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	trace_io_event_common(cfg, &key, value, ret);
+	trace_io_event_common("recvfrom", cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
 	return 0;
@@ -427,7 +428,7 @@ static int trace_sys_exit_recvmsg(struct trace_event_raw_sys_exit *ctx)
 	struct hook_ctx_key key = { .func = FUNC_SYSCALL_RECVMSG, .tgid = tgid, .pid = pid };
 	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
 
-	trace_io_event_common(cfg, &key, value, ret);
+	trace_io_event_common("recvmsg", cfg, &key, value, ret);
 
 	bpf_map_delete_elem(&hook_ctx_map, &key);
 	return 0;
@@ -537,6 +538,108 @@ static int trace_sys_exit_sendmmsg(struct trace_event_raw_sys_exit *ctx)
 	return 0;
 }
 
+static int trace_sys_enter_close(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	unsigned int fd = (unsigned int)ctx->args[0];
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_CLOSE, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value value = { .fd = fd, .nsec = bpf_ktime_get_boot_ns() };
+
+	// close 系统调用结束后 fd 相关的信息无法获取,需要在进入函数时处理
+	trace_io_event_common("close", cfg, &key, &value, 0);
+	return 0;
+}
+
+static int trace_sys_enter_sendfile(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	unsigned int in_fd = (unsigned int)ctx->args[1];
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_SENDFILE, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value value = { .fd = in_fd, .nsec = bpf_ktime_get_boot_ns() };
+
+	bpf_map_update_elem(&hook_ctx_map, &key, &value, BPF_ANY);
+
+	return 0;
+}
+
+static int trace_sys_exit_sendfile(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	int ret = (int)ctx->ret;
+
+	struct hook_ctx_key key = { .func = FUNC_SYSCALL_SENDFILE, .tgid = tgid, .pid = pid };
+	struct hook_ctx_value *value = bpf_map_lookup_elem(&hook_ctx_map, &key);
+
+	trace_io_event_common("sendfile", cfg, &key, value, ret);
+
+	bpf_map_delete_elem(&hook_ctx_map, &key);
+	return 0;
+}
+
+#if defined(DEBUG)
+static int trace_sys_enter_default(struct trace_event_raw_sys_enter *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+	u32 pid = (u32)pid_tgid;
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	LOG("trace_sys_enter_default: id=%d args=(%d, %d, %d, %d, %d, %d)", ctx->id, ctx->args[0], ctx->args[1], ctx->args[2], ctx->args[3],
+	    ctx->args[4], ctx->args[5]);
+	return 0;
+}
+
+static int trace_sys_exit_default(struct trace_event_raw_sys_exit *ctx)
+{
+	u64 pid_tgid = bpf_get_current_pid_tgid();
+	u32 tgid = (u32)(pid_tgid >> 32);
+
+	struct pproc_cfg *cfg = bpf_map_lookup_elem(&pproc_cfg_map, &tgid);
+	if (!cfg || !cfg->enabled)
+		return 0;
+
+	int ret = (int)ctx->ret;
+	LOG("trace_sys_exit_default: ret=%d", ret);
+	return 0;
+}
+#else
+static int trace_sys_enter_default(struct trace_event_raw_sys_enter *ctx)
+{
+	return 0;
+}
+
+static int trace_sys_exit_default(struct trace_event_raw_sys_exit *ctx)
+{
+	return 0;
+}
+#endif
+
 static int trace_sys_enter(struct trace_event_raw_sys_enter *ctx)
 {
 	switch (ctx->id) {
@@ -575,6 +678,15 @@ static int trace_sys_enter(struct trace_event_raw_sys_enter *ctx)
 		break;
 	case __NR_sendmmsg:
 		trace_sys_enter_sendmmsg(ctx);
+		break;
+	case __NR_sendfile:
+		trace_sys_enter_sendfile(ctx);
+		break;
+	case __NR_close:
+		trace_sys_enter_close(ctx);
+		break;
+	default:
+		trace_sys_enter_default(ctx);
 		break;
 	}
 	return 0;
@@ -618,6 +730,12 @@ static int trace_sys_exit(struct trace_event_raw_sys_exit *ctx)
 		break;
 	case __NR_sendmmsg:
 		trace_sys_exit_sendmmsg(ctx);
+		break;
+	case __NR_sendfile:
+		trace_sys_exit_sendfile(ctx);
+		break;
+	default:
+		trace_sys_exit_default(ctx);
 		break;
 	}
 	return 0;
