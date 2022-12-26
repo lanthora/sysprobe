@@ -7,8 +7,7 @@
 #include "sysprobe-ebpf/types.h"
 #include "sysprobe-ebpf/vmlinux.h"
 #include <asm/unistd.h>
-
-#define ntohs(__x) (((__x & 0xff00) >> 8) | ((__x & 0x00ff) << 8))
+#include <bpf/bpf_endian.h>
 
 static struct file *fd_to_file(unsigned int idx)
 {
@@ -83,7 +82,7 @@ static void trace_io_event_common(struct pproc_cfg *cfg, struct hook_ctx_key *ke
 			u32 remote_addr = BPF_CORE_READ(sk, sk_daddr);
 			u16 local_port = BPF_CORE_READ(sk, sk_num);
 			u16 remote_port = BPF_CORE_READ(sk, sk_dport);
-			remote_port = ntohs(remote_port);
+			remote_port = bpf_ntohs(remote_port);
 			LOG("socket file: func=%d tgid=%d pid=%d fd=%d ret=%d latency=%u family=%u local=%pI4:%u remote=%pI4:%u", func, tgid, pid, fd,
 			    ret, latency, family, &local_addr, local_port, &remote_addr, remote_port);
 		}
