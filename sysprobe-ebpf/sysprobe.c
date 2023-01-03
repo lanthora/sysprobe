@@ -4,6 +4,7 @@
 #include "sysprobe-ebpf/skb.h"
 #include "sysprobe-ebpf/syscalls.h"
 #include "sysprobe-ebpf/tcp.h"
+#include "sysprobe-ebpf/uprobe.h"
 #include "sysprobe-ebpf/vmlinux.h"
 
 char LICENSE[] SEC("license") = "GPL";
@@ -90,4 +91,10 @@ SEC("tp/tcp/tcp_destroy_sock")
 int tcp_destroy_sock(struct trace_event_raw_tcp_event_sk *ctx)
 {
 	return trace_tcp_destroy_sock(ctx);
+}
+
+SEC("uprobe")
+int BPF_KPROBE(enter_runtime_gopanic)
+{
+	return trace_enter_runtime_gopanic(ctx);
 }

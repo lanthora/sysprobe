@@ -10,7 +10,7 @@
 
 #define ___LOG(__fmt, __args...)                                                                                                                     \
 	{                                                                                                                                            \
-		struct elog *__e = (struct elog *)bpf_ringbuf_reserve(&ringbuf, sizeof(struct elog), 0);                                             \
+		struct event_log *__e = (struct event_log *)bpf_ringbuf_reserve(&ringbuf, sizeof(struct event_log), 0);                              \
 		if (__e) {                                                                                                                           \
 			__e->type = RB_EVENT_LOG;                                                                                                    \
 			__e->nsec = bpf_ktime_get_boot_ns();                                                                                         \

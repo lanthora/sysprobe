@@ -10,16 +10,18 @@
 #include <thread>
 #include <unistd.h>
 
+extern struct sysprobe *skel;
+
 int control::handle_pproc_enabled(void *buffer, int len)
 {
 	assert(len == sizeof(struct ctl_pproc_enabled));
 
 	struct ctl_pproc_enabled *event = (struct ctl_pproc_enabled *)buffer;
 	struct pproc_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg);
 
 	cfg.enabled = event->enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -31,10 +33,10 @@ int control::handle_io_event_others_enabled(void *buffer, int len)
 
 	struct ctl_io_event_others_enabled *event = (struct ctl_io_event_others_enabled *)buffer;
 	struct pproc_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg);
 
 	cfg.io_event_others_enabled = event->io_event_others_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -46,10 +48,10 @@ int control::handle_io_event_socket_disabled(void *buffer, int len)
 
 	struct ctl_io_event_socket_disabled *event = (struct ctl_io_event_socket_disabled *)buffer;
 	struct pproc_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg);
 
 	cfg.io_event_socket_disabled = event->io_event_socket_disabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.pproc_cfg_map), &event->tgid, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -63,10 +65,10 @@ int control::handle_log_enabled(void *buffer, int len)
 
 	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.log_enabled = event->log_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -80,10 +82,10 @@ int control::handle_kfree_skb_enabled(void *buffer, int len)
 
 	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.kfree_skb_enabled = event->kfree_skb_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -97,10 +99,10 @@ int control::handle_nf_hook_slow_enabled(void *buffer, int len)
 
 	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.nf_hook_slow_enabled = event->nf_hook_slow_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -114,10 +116,10 @@ int control::handle_sched_enabled(void *buffer, int len)
 
 	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.sched_enabled = event->sched_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -131,10 +133,10 @@ int control::handle_tcp_probe_enabled(void *buffer, int len)
 
 	int zero = 0;
 	struct global_cfg cfg = {};
-	bpf_map_lookup_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg);
+	bpf_map_lookup_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg);
 
 	cfg.tcp_probe_enabled = event->tcp_probe_enabled;
-	bpf_map_update_elem(bpf_map__fd(skel_->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
+	bpf_map_update_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
 	return 0;
@@ -202,15 +204,9 @@ int control::serve()
 	return size;
 }
 
-int control::start(struct sysprobe *skel)
+int control::start()
 {
-	int ret;
-
-	if (!skel)
-		return -EINVAL;
-	skel_ = skel;
-
-	ret = init_socket_fd();
+	int ret = init_socket_fd();
 	if (ret)
 		return ret;
 

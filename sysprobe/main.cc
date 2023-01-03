@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <iostream>
 
+struct sysprobe *skel = NULL;
+
 static void handle_signal(int sig)
 {
 	std::cout << strsignal(sig) << std::endl;
@@ -14,7 +16,6 @@ static void handle_signal(int sig)
 int main()
 {
 	int retval = 0;
-	struct sysprobe *skel = NULL;
 	struct ring_buffer *rb = NULL;
 	control ctrl;
 
@@ -29,7 +30,7 @@ int main()
 	if (retval)
 		goto destory;
 
-	retval = ctrl.start(skel);
+	retval = ctrl.start();
 	if (retval)
 		goto detach;
 
@@ -47,6 +48,7 @@ detach:
 destory:
 	sysprobe__destroy(skel);
 out:
+	skel = NULL;
 	std::cout << "Exit" << std::endl;
 	return 0;
 }

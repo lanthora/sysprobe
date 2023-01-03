@@ -41,4 +41,11 @@ struct {
 	__type(value, struct tcp_probe_value);
 } tcp_probe_map SEC(".maps");
 
+struct {
+	__uint(type, BPF_MAP_TYPE_STACK_TRACE);
+	__uint(key_size, sizeof(u32));
+	__uint(value_size, MAX_STACK_DEPTH * sizeof(u64));
+	__uint(max_entries, CONFIG_CONCURRENT_THREAD_MAX);
+} stack_trace_map SEC(".maps");
+
 #endif

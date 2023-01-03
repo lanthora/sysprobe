@@ -40,4 +40,8 @@
 #define CONFIG_SOCK_NUM_MAX (10240)
 #endif
 
+#ifndef MAX_STACK_DEPTH
+#define MAX_STACK_DEPTH 127
+#endif
+
 #endif

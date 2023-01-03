@@ -6,7 +6,7 @@
 
 class control {
     public:
-	int start(struct sysprobe *skel);
+	int start();
 
     private:
 	int handle_log_enabled(void *buffer, int len);
@@ -22,7 +22,6 @@ class control {
 	int init_socket_fd();
 	int serve();
 	int socket_fd_;
-	struct sysprobe *skel_;
 	struct sockaddr_un server_;
 };
 

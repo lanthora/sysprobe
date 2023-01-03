@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "sysprobe/callback.h"
 #include "sysprobe-common/types.h"
+#include "sysprobe/sysprobe.skel.h"
+#include <bpf/bpf.h>
 #include <csignal>
 #include <cstdio>
 #include <cstring>
@@ -8,6 +10,8 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/un.h>
+
+extern struct sysprobe *skel;
 
 // 根据系统启动时间和内核记录的纳秒时间戳计算事件产生的时间
 static int clock_get_event_time(unsigned long long nsec, struct timespec *now)
@@ -32,7 +36,7 @@ static int clock_get_event_time(unsigned long long nsec, struct timespec *now)
 
 static int handle_log_event(void *ctx, void *data, size_t len)
 {
-	struct elog *e = (struct elog *)data;
+	struct event_log *e = (struct event_log *)data;
 
 	struct timespec now;
 	clock_get_event_time(e->nsec, &now);
@@ -41,6 +45,26 @@ static int handle_log_event(void *ctx, void *data, size_t len)
 	char date_time[32];
 	strftime(date_time, sizeof(date_time), "%Y-%m-%d %H:%M:%S", localtime_r(&now.tv_sec, &t));
 	printf("[%s.%09lu] %s\n", date_time, now.tv_nsec, e->msg);
+	return 0;
+}
+
+static int handle_stack_trace_event(void *ctx, void *data, size_t len)
+{
+	struct event_stack_trace *e = (struct event_stack_trace *)data;
+	uint64_t ip[MAX_STACK_DEPTH];
+	uint32_t stackid = e->stackid;
+
+	memset(ip, 0, sizeof(ip));
+	int ret = bpf_map_lookup_elem(bpf_map__fd(skel->maps.stack_trace_map), &stackid, &ip);
+	if (ret) {
+		printf("err\n");
+	}
+
+	for (int idx = MAX_STACK_DEPTH - 1; idx >= 0; --idx) {
+		if (!ip[idx])
+			continue;
+		printf("%016lx\n", ip[idx]);
+	}
 	return 0;
 }
 
@@ -61,6 +85,9 @@ int ring_buffer_callback(void *ctx, void *data, size_t len)
 		break;
 	case RB_EVENT_LOG:
 		handle_log_event(ctx, data, len);
+		break;
+	case RB_EVENT_STACK_TRACE:
+		handle_stack_trace_event(ctx, data, len);
 		break;
 	default:
 		sendto(fd, data, len, 0, (struct sockaddr *)&addr, sizeof(addr));
