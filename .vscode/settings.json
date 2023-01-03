@@ -11,4 +11,5 @@
 	],
 	"C_Cpp.errorSquiggles": "disabled",
 	"C_Cpp.intelliSenseEngine": "Tag Parser",
+	"editor.formatOnSaveMode": "modifications",
 }

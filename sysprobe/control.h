@@ -17,6 +17,7 @@ class control {
 	int handle_nf_hook_slow_enabled(void *buffer, int len);
 	int handle_sched_enabled(void *buffer, int len);
 	int handle_tcp_probe_enabled(void *buffer, int len);
+	int handle_call_stack_trace(void *buffer, int len);
 
     private:
 	int init_socket_fd();

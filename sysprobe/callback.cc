@@ -57,10 +57,11 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 	memset(ip, 0, sizeof(ip));
 	int ret = bpf_map_lookup_elem(bpf_map__fd(skel->maps.stack_trace_map), &stackid, &ip);
 	if (ret) {
-		printf("err\n");
+		printf("stack_trace_map lookup failed\n");
+		return 0;
 	}
 
-	for (int idx = MAX_STACK_DEPTH - 1; idx >= 0; --idx) {
+	for (int idx = 0; idx < MAX_STACK_DEPTH; ++idx) {
 		if (!ip[idx])
 			continue;
 		printf("%016lx\n", ip[idx]);

@@ -142,6 +142,17 @@ int control::handle_tcp_probe_enabled(void *buffer, int len)
 	return 0;
 }
 
+int control::handle_call_stack_trace(void *buffer, int len)
+{
+	assert(len == sizeof(struct ctl_call_stack_trace));
+	struct ctl_call_stack_trace *event = (struct ctl_call_stack_trace *)buffer;
+	if (bpf_program__attach_uprobe(skel->progs.call_stack, event->retprobe, event->pid, event->binary_path, event->func_offset))
+		event->ret = 0;
+	else
+		event->ret = -1;
+	return 0;
+}
+
 int control::init_socket_fd()
 {
 	socket_fd_ = socket(AF_UNIX, SOCK_DGRAM, 0);
@@ -196,6 +207,9 @@ int control::serve()
 			break;
 		case CTL_EVENT_TCP_PROBE_ENABLED:
 			handle_tcp_probe_enabled(buffer, size);
+			break;
+		case CTL_EVENT_CALL_STACK_TRACE:
+			handle_call_stack_trace(buffer, size);
 			break;
 		}
 		sendto(socket_fd_, buffer, size, 0, (struct sockaddr *)&peer, len);

@@ -3,6 +3,7 @@
 #define SYSPROBE_COMMON_TYPES_H
 
 #include "sysprobe-common/config.h"
+#include <linux/limits.h>
 
 // 内核通过 Ringbuf 上报的事件
 enum {
@@ -51,6 +52,7 @@ enum {
 	CTL_EVENT_NF_HOOK_SLOW_ENABLED,
 	CTL_EVENT_SCHED_ENABLED,
 	CTL_EVENT_TCP_PROBE_ENABLED,
+	CTL_EVENT_CALL_STACK_TRACE,
 };
 
 struct ctl_io_event_others_enabled {
@@ -101,6 +103,15 @@ struct ctl_pproc_enabled {
 	unsigned int type /* = CTL_EVENT_PPROC_ENABLED */;
 	int tgid;
 	int enabled;
+	int ret;
+} __attribute__((__packed__));
+
+struct ctl_call_stack_trace {
+	unsigned int type /* = CTL_EVENT_CALL_STACK_TRACE */;
+	int retprobe;
+	int pid;
+	unsigned long long func_offset;
+	char binary_path[PATH_MAX];
 	int ret;
 } __attribute__((__packed__));
 

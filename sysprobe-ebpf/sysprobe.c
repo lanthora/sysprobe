@@ -94,7 +94,7 @@ int tcp_destroy_sock(struct trace_event_raw_tcp_event_sk *ctx)
 }
 
 SEC("uprobe")
-int BPF_KPROBE(enter_runtime_gopanic)
+int BPF_KPROBE(call_stack)
 {
-	return trace_enter_runtime_gopanic(ctx);
+	return trace_call_stack(ctx);
 }

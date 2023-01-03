@@ -9,10 +9,10 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 
-static int trace_enter_runtime_gopanic(struct pt_regs *ctx)
+static int trace_call_stack(struct pt_regs *ctx)
 {
 	u32 stackid = bpf_get_stackid(ctx, &stack_trace_map, BPF_F_FAST_STACK_CMP | BPF_F_USER_STACK);
-	LOG("runtime.panic: stackid=%u", stackid);
+	LOG("call_stack: stackid=%u", stackid);
 
 	struct event_stack_trace *e = (struct event_stack_trace *)bpf_ringbuf_reserve(&ringbuf, sizeof(struct event_stack_trace), 0);
 	if (e) {
