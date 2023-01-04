@@ -18,6 +18,8 @@ static int trace_call_stack(struct pt_regs *ctx)
 	if (e) {
 		e->type = RB_EVENT_STACK_TRACE;
 		e->stackid = stackid;
+		e->pid = bpf_get_current_pid_tgid() >> 32;
+		bpf_get_current_comm(e->comm, sizeof(e->comm));
 		bpf_ringbuf_submit(e, 0);
 	}
 

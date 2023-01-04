@@ -51,8 +51,10 @@ static int handle_log_event(void *ctx, void *data, size_t len)
 static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 {
 	struct event_stack_trace *e = (struct event_stack_trace *)data;
-	uint64_t ip[MAX_STACK_DEPTH];
+	void *ip[MAX_STACK_DEPTH];
 	uint32_t stackid = e->stackid;
+
+	printf("stack trace: pid=%d comm=%s\n", e->pid, e->comm);
 
 	memset(ip, 0, sizeof(ip));
 	int ret = bpf_map_lookup_elem(bpf_map__fd(skel->maps.stack_trace_map), &stackid, &ip);
@@ -61,10 +63,11 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 		return 0;
 	}
 
+	// TODO: 显示行号和函数名
 	for (int idx = 0; idx < MAX_STACK_DEPTH; ++idx) {
 		if (!ip[idx])
-			continue;
-		printf("%016lx\n", ip[idx]);
+			break;
+		printf("%p\n", ip[idx]);
 	}
 	return 0;
 }

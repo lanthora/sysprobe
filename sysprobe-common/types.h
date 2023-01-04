@@ -21,6 +21,8 @@ struct event_log {
 struct event_stack_trace {
 	unsigned int type /* = RB_EVENT_STACK_TRACE */;
 	unsigned int stackid;
+	int pid;
+	char comm[16];
 } __attribute__((__packed__));
 
 // 与单个进程相关的配置,至少一个功能与默认行为不一致时才会初始化,初始化时字段默认为 0,
