@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "sysprobe/callback.h"
 #include "sysprobe-common/types.h"
+#include "sysprobe/libatl.h"
 #include "sysprobe/sysprobe.skel.h"
 #include <bpf/bpf.h>
 #include <csignal>
@@ -48,11 +49,19 @@ static int handle_log_event(void *ctx, void *data, size_t len)
 	return 0;
 }
 
+static void stack_trace_callback(bfd_vma pc, const char *functionname, const char *filename, int line, void *data)
+{
+	int idx = *(int *)data;
+	printf("#%d %p %s %s:%d\n", idx, (void *)pc, functionname, filename, line);
+}
+
 static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 {
 	struct event_stack_trace *e = (struct event_stack_trace *)data;
-	void *ip[MAX_STACK_DEPTH];
+	char filename[4096];
+	uintptr_t ip[MAX_STACK_DEPTH];
 	uint32_t stackid = e->stackid;
+	struct libatl_context *atl_ctx;
 
 	printf("stack trace: pid=%d comm=%s\n", e->pid, e->comm);
 
@@ -63,12 +72,21 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 		return 0;
 	}
 
-	// TODO: 显示行号和函数名
+	sprintf(filename, "/proc/%d/exe", e->pid);
+
+	atl_ctx = libatl_init(filename);
+	if (!atl_ctx) {
+		printf("libatl_init failed\n");
+		return 0;
+	}
+
 	for (int idx = 0; idx < MAX_STACK_DEPTH; ++idx) {
 		if (!ip[idx])
 			break;
-		printf("%p\n", ip[idx]);
+		libatl_find(atl_ctx, ip[idx], stack_trace_callback, &idx);
 	}
+	libatl_free(atl_ctx);
+
 	return 0;
 }
 
