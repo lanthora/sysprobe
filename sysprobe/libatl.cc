@@ -106,7 +106,6 @@ struct libatl_context *libatl_init(int pid)
 		return NULL;
 	}
 
-	printf("addr_start=%p\n", (void *)ctx->addr_start);
 	return ctx;
 }
 
@@ -115,6 +114,10 @@ bool libatl_search(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_
 	if (!ctx)
 		return FALSE;
 
+	ctx->filename = NULL;
+	ctx->functionname = NULL;
+	ctx->line = 0;
+	ctx->discriminator = 0;
 	ctx->found = FALSE;
 	ctx->pc = pc - ctx->addr_start;
 	bfd_map_over_sections(ctx->abfd, find_address_in_section, ctx);
