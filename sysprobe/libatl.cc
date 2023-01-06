@@ -17,8 +17,37 @@ static void find_address_in_section(bfd *abfd, asection *section, void *data)
 							 &ctx->discriminator);
 }
 
-struct libatl_context *libatl_init(const char *filename)
+static bfd_vma addr_start(int pid)
 {
+	FILE *maps = NULL;
+	char buffer[1024];
+
+	sprintf(buffer, "/proc/%d/maps", pid);
+	maps = fopen(buffer, "rb");
+	if (!maps) {
+		return 0;
+	}
+
+	if (!fgets(buffer, sizeof(buffer), maps)) {
+		fclose(maps);
+		return 0;
+	}
+
+	fclose(maps);
+
+	char *pos = strstr(buffer, "-");
+	if (!pos) {
+		fclose(maps);
+		return 0;
+	}
+	*pos = '\0';
+	return (bfd_vma)strtoll(buffer, NULL, 16);
+}
+
+struct libatl_context *libatl_init(int pid)
+{
+	char filename[4096];
+	sprintf(filename, "/proc/%d/exe", pid);
 	bfd *abfd = bfd_openr(filename, NULL);
 	if (!abfd)
 		return NULL;
@@ -61,17 +90,33 @@ struct libatl_context *libatl_init(const char *filename)
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->syms = syms;
 	ctx->abfd = abfd;
+	ctx->addr_start = addr_start(pid);
+
+	// FIXME: 未启动 PIE 的情况下调整为 0, 需要有更好的方法判断是否启用 PIE
+	if (ctx->addr_start == 0x400000) {
+		ctx->addr_start = 0;
+	}
+
+	ctx->section = bfd_get_section_by_name(ctx->abfd, ".text");
+
+	if ((bfd_section_flags(ctx->section) & SEC_ALLOC) == 0) {
+		free(syms);
+		bfd_close(abfd);
+		free(ctx);
+		return NULL;
+	}
+
+	printf("addr_start=%p\n", (void *)ctx->addr_start);
 	return ctx;
 }
 
-bool libatl_find(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data)
+bool libatl_search(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data)
 {
 	if (!ctx)
 		return FALSE;
 
 	ctx->found = FALSE;
-	// TODO: 开启 PIE 时,此处的地址需要减去进程加载的起始地址.需要根据进程计算
-	ctx->pc = pc;
+	ctx->pc = pc - ctx->addr_start;
 	bfd_map_over_sections(ctx->abfd, find_address_in_section, ctx);
 	if (callback) {
 		callback(pc, ctx->functionname, ctx->filename, ctx->line, data);

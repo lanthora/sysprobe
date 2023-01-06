@@ -52,13 +52,12 @@ static int handle_log_event(void *ctx, void *data, size_t len)
 static void stack_trace_callback(bfd_vma pc, const char *functionname, const char *filename, int line, void *data)
 {
 	int idx = *(int *)data;
-	printf("#%d %p %s %s:%d\n", idx, (void *)pc, functionname, filename, line);
+	printf("#%d %p at %s in %s:%d\n", idx, (void *)pc, functionname, filename, line);
 }
 
 static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 {
 	struct event_stack_trace *e = (struct event_stack_trace *)data;
-	char filename[4096];
 	uintptr_t ip[MAX_STACK_DEPTH];
 	uint32_t stackid = e->stackid;
 	struct libatl_context *atl_ctx;
@@ -72,9 +71,7 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 		return 0;
 	}
 
-	sprintf(filename, "/proc/%d/exe", e->pid);
-
-	atl_ctx = libatl_init(filename);
+	atl_ctx = libatl_init(e->pid);
 	if (!atl_ctx) {
 		printf("libatl_init failed\n");
 		return 0;
@@ -83,8 +80,9 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 	for (int idx = 0; idx < MAX_STACK_DEPTH; ++idx) {
 		if (!ip[idx])
 			break;
-		libatl_find(atl_ctx, ip[idx], stack_trace_callback, &idx);
+		libatl_search(atl_ctx, ip[idx], stack_trace_callback, &idx);
 	}
+	printf("\n");
 	libatl_free(atl_ctx);
 
 	return 0;

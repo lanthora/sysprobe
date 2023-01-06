@@ -12,6 +12,8 @@
 
 struct libatl_context {
 	bfd *abfd;
+	bfd_vma addr_start;
+	asection *section;
 	asymbol **syms;
 	bfd_vma pc;
 	bfd_boolean found;
@@ -27,8 +29,8 @@ extern "C" {
 
 typedef void (*libatl_find_callback_t)(bfd_vma pc, const char *functionname, const char *filename, int line, void *data);
 
-struct libatl_context *libatl_init(const char *filename);
-bool libatl_find(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data);
+struct libatl_context *libatl_init(int pid);
+bool libatl_search(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data);
 void libatl_free(struct libatl_context *ctx);
 
 #ifdef __cplusplus
