@@ -70,9 +70,10 @@ bool libatl_find(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_t 
 		return FALSE;
 
 	ctx->found = FALSE;
+	// TODO: 开启 PIE 时,此处的地址需要减去进程加载的起始地址.需要根据进程计算
 	ctx->pc = pc;
 	bfd_map_over_sections(ctx->abfd, find_address_in_section, ctx);
-	if (ctx->found && callback) {
+	if (callback) {
 		callback(pc, ctx->functionname, ctx->filename, ctx->line, data);
 	}
 
