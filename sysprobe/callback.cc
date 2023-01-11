@@ -2,6 +2,7 @@
 #include "sysprobe/callback.h"
 #include "sysprobe-common/types.h"
 #include "sysprobe-library/addr2line.h"
+#include "sysprobe-library/process.h"
 #include "sysprobe/sysprobe.skel.h"
 #include <bpf/bpf.h>
 #include <csignal>
@@ -13,6 +14,7 @@
 #include <sys/un.h>
 
 extern struct sysprobe *skel;
+extern class process_collector p_collector;
 
 // 根据系统启动时间和内核记录的纳秒时间戳计算事件产生的时间
 static int clock_get_event_time(unsigned long long nsec, struct timespec *now)
@@ -71,9 +73,9 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 		return 0;
 	}
 
-	addr2line_ctx = addr2line_init(e->pid);
+	addr2line_ctx = p_collector.fetch_addr2line_ctx(e->pid);
 	if (!addr2line_ctx) {
-		printf("addr2line_init failed\n");
+		printf("fetch_addr2line_ctx failed\n");
 		return 0;
 	}
 
@@ -83,8 +85,24 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 		addr2line_search(addr2line_ctx, ip[idx], stack_trace_callback, &idx);
 	}
 	printf("\n");
-	addr2line_free(addr2line_ctx);
 
+	return 0;
+}
+
+static int handle_sched_event(void *ctx, void *data, size_t len)
+{
+	struct event_sched *e = (struct event_sched *)data;
+	switch (e->op) {
+	case 0: // fork
+		p_collector.copy_process_item(e->pid, e->ppid);
+		break;
+	case 1: // execve
+		p_collector.update_process_item(e->pid);
+		break;
+	case 2: // exit
+		p_collector.delete_process_item(e->pid);
+		break;
+	}
 	return 0;
 }
 
@@ -108,6 +126,9 @@ int ring_buffer_callback(void *ctx, void *data, size_t len)
 		break;
 	case RB_EVENT_STACK_TRACE:
 		handle_stack_trace_event(ctx, data, len);
+		break;
+	case RB_EVENT_SCHED:
+		handle_sched_event(ctx, data, len);
 		break;
 	default:
 		sendto(fd, data, len, 0, (struct sockaddr *)&addr, sizeof(addr));

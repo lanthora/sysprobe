@@ -11,14 +11,14 @@ import config
 client_file = '/tmp/sysprobe-{}.sock'.format(uuid.uuid4())
 server_file = config.CONFIG_CTL_SOCKET_PATH
 
-event_enabled = int(sys.argv[1])
+event_disabled = int(sys.argv[1])
 
 unix_domain_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 
 unix_domain_socket.bind(client_file)
 unix_domain_socket.connect(server_file)
 
-bytes_to_send = struct.pack("=Iii", 7, event_enabled, 0)
+bytes_to_send = struct.pack("=Iii", 7, event_disabled, 0)
 unix_domain_socket.send(bytes_to_send)
 bytes_to_unpack = unix_domain_socket.recv(len(bytes_to_send))
 

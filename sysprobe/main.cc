@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+#include "sysprobe-library/process.h"
 #include "sysprobe/callback.h"
 #include "sysprobe/control.h"
 #include "sysprobe/sysprobe.skel.h"
@@ -7,6 +8,7 @@
 #include <iostream>
 
 struct sysprobe *skel = NULL;
+class process_collector p_collector;
 
 static void handle_signal(int sig)
 {
@@ -37,6 +39,8 @@ int main()
 	rb = ring_buffer__new(bpf_map__fd(skel->maps.ringbuf), ring_buffer_callback, NULL, NULL);
 	if (!rb)
 		goto detach;
+
+	p_collector.scan_procfs();
 
 	do {
 		retval = ring_buffer__poll(rb, 100);

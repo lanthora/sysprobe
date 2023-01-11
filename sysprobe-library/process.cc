@@ -10,7 +10,7 @@ void process_collector::scan_procfs()
 
 	// openproc 申请一块堆内存作为缓冲区,运行过程中不会释放, valgrind 会发现这个问题
 	// https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=730460#20
-	PROCTAB *proc = openproc(PROC_FILLSTAT);
+	PROCTAB *proc = openproc(0);
 	proc_t proc_info;
 	memset(&proc_info, 0, sizeof(proc_info));
 
@@ -34,7 +34,6 @@ int process_collector::copy_process_item(int new_pid, int old_pid)
 	}
 
 	if (!process_map.contains(old_pid) || process_map.contains(new_pid)) {
-		// TODO: 不应该返回 0,需要报错
 		return 0;
 	}
 
@@ -55,7 +54,6 @@ int process_collector::update_process_item(int pid)
 	return 0;
 }
 
-/* 进程退出时调用,清理进程信息 */
 int process_collector::delete_process_item(int pid)
 {
 	process_map.erase(pid);

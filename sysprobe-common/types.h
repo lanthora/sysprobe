@@ -10,6 +10,7 @@ enum {
 	RB_EVENT_UNSPEC,
 	RB_EVENT_LOG,
 	RB_EVENT_STACK_TRACE,
+	RB_EVENT_SCHED,
 };
 
 struct event_log {
@@ -23,6 +24,13 @@ struct event_stack_trace {
 	unsigned int stackid;
 	int pid;
 	char comm[16];
+} __attribute__((__packed__));
+
+struct event_sched {
+	unsigned int type /* = RB_EVENT_SCHED */;
+	int op; // 0:fork 1:execve 2:exit
+	int pid;
+	int ppid;
 } __attribute__((__packed__));
 
 // 与单个进程相关的配置,至少一个功能与默认行为不一致时才会初始化,初始化时字段默认为 0,
@@ -40,7 +48,7 @@ struct global_cfg {
 	int log_enabled;
 	int kfree_skb_enabled;
 	int nf_hook_slow_enabled;
-	int sched_enabled;
+	int sched_disabled;
 	int tcp_probe_enabled;
 } __attribute__((__packed__));
 
@@ -84,7 +92,7 @@ struct ctl_nf_hook_slow_enabled {
 
 struct ctl_sched_enabled {
 	unsigned int type /* = CTL_EVENT_SCHED_ENABLED */;
-	int sched_enabled;
+	int sched_disabled;
 	int ret;
 } __attribute__((__packed__));
 

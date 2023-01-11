@@ -1,6 +1,6 @@
 all: target/sysprobe
 
-target/sysprobe: sysprobe/sysprobe.skel.h sysprobe/* sysprobe-common/*
+target/sysprobe: sysprobe/sysprobe.skel.h sysprobe/* sysprobe-common/* sysprobe-library/*
 	g++ -std=c++20 -g -O2 -I . sysprobe/*.cc sysprobe-library/*.cc -lbpf -lbfd -lprocps -o target/sysprobe
 
 sysprobe/sysprobe.skel.h: sysprobe-ebpf/vmlinux.h sysprobe-ebpf/* sysprobe-common/*

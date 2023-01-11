@@ -118,7 +118,7 @@ int control::handle_sched_enabled(void *buffer, int len)
 	struct global_cfg cfg = {};
 	bpf_map_lookup_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg);
 
-	cfg.sched_enabled = event->sched_enabled;
+	cfg.sched_disabled = event->sched_disabled;
 	bpf_map_update_elem(bpf_map__fd(skel->maps.global_cfg_map), &zero, &cfg, BPF_ANY);
 
 	event->ret = 0;
