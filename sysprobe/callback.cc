@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "sysprobe/callback.h"
 #include "sysprobe-common/types.h"
-#include "sysprobe/libatl.h"
+#include "sysprobe/addr2line.h"
 #include "sysprobe/sysprobe.skel.h"
 #include <bpf/bpf.h>
 #include <csignal>
@@ -60,7 +60,7 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 	struct event_stack_trace *e = (struct event_stack_trace *)data;
 	uintptr_t ip[MAX_STACK_DEPTH];
 	uint32_t stackid = e->stackid;
-	struct libatl_context *atl_ctx;
+	struct addr2line *addr2line_ctx;
 
 	printf("stack trace: pid=%d comm=%s\n", e->pid, e->comm);
 
@@ -71,19 +71,19 @@ static int handle_stack_trace_event(void *ctx, void *data, size_t len)
 		return 0;
 	}
 
-	atl_ctx = libatl_init(e->pid);
-	if (!atl_ctx) {
-		printf("libatl_init failed\n");
+	addr2line_ctx = addr2line_init(e->pid);
+	if (!addr2line_ctx) {
+		printf("addr2line_init failed\n");
 		return 0;
 	}
 
 	for (int idx = 0; idx < MAX_STACK_DEPTH; ++idx) {
 		if (!ip[idx])
 			break;
-		libatl_search(atl_ctx, ip[idx], stack_trace_callback, &idx);
+		addr2line_search(addr2line_ctx, ip[idx], stack_trace_callback, &idx);
 	}
 	printf("\n");
-	libatl_free(atl_ctx);
+	addr2line_free(addr2line_ctx);
 
 	return 0;
 }

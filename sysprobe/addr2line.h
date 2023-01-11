@@ -1,5 +1,5 @@
-#ifndef SYSPROBE_LIBATL_H
-#define SYSPROBE_LIBATL_H
+#ifndef SYSPROBE_ADDR2LINE_H
+#define SYSPROBE_ADDR2LINE_H
 
 #include <assert.h>
 #include <stdio.h>
@@ -10,7 +10,7 @@
 #define PACKAGE_VERSION "0.0.0"
 #include <bfd.h>
 
-struct libatl_context {
+struct addr2line {
 	bfd *abfd;
 	bfd_vma addr_start;
 	asection *section;
@@ -23,18 +23,10 @@ struct libatl_context {
 	unsigned int discriminator;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef void (*libatl_find_callback_t)(bfd_vma pc, const char *functionname, const char *filename, int line, void *data);
 
-struct libatl_context *libatl_init(int pid);
-bool libatl_search(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data);
-void libatl_free(struct libatl_context *ctx);
-
-#ifdef __cplusplus
-}
-#endif
+struct addr2line *addr2line_init(int pid);
+bool addr2line_search(struct addr2line *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data);
+void addr2line_free(struct addr2line *ctx);
 
 #endif

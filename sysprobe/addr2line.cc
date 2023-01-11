@@ -1,8 +1,8 @@
-#include "sysprobe/libatl.h"
+#include "sysprobe/addr2line.h"
 
 static void find_address_in_section(bfd *abfd, asection *section, void *data)
 {
-	struct libatl_context *ctx = (struct libatl_context *)data;
+	struct addr2line *ctx = (struct addr2line *)data;
 	if (ctx->found)
 		return;
 	if ((bfd_section_flags(section) & SEC_ALLOC) == 0)
@@ -44,7 +44,7 @@ static bfd_vma addr_start(int pid)
 	return (bfd_vma)strtoll(buffer, NULL, 16);
 }
 
-struct libatl_context *libatl_init(int pid)
+struct addr2line *addr2line_init(int pid)
 {
 	char filename[4096];
 	sprintf(filename, "/proc/%d/exe", pid);
@@ -81,7 +81,7 @@ struct libatl_context *libatl_init(int pid)
 		return NULL;
 	}
 
-	struct libatl_context *ctx = (struct libatl_context *)malloc(sizeof(struct libatl_context));
+	struct addr2line *ctx = (struct addr2line *)malloc(sizeof(struct addr2line));
 	if (!ctx) {
 		free(syms);
 		bfd_close(abfd);
@@ -109,7 +109,7 @@ struct libatl_context *libatl_init(int pid)
 	return ctx;
 }
 
-bool libatl_search(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data)
+bool addr2line_search(struct addr2line *ctx, bfd_vma pc, libatl_find_callback_t callback, void *data)
 {
 	if (!ctx)
 		return FALSE;
@@ -128,8 +128,11 @@ bool libatl_search(struct libatl_context *ctx, bfd_vma pc, libatl_find_callback_
 	return ctx->found;
 }
 
-void libatl_free(struct libatl_context *ctx)
+void addr2line_free(struct addr2line *ctx)
 {
+	if (!ctx)
+		return;
+
 	free(ctx->syms);
 	bfd_close(ctx->abfd);
 	free(ctx);
