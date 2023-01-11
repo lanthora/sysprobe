@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 #include "sysprobe-library/addr2line.h"
 
 static void find_address_in_section(bfd *abfd, asection *section, void *data)
