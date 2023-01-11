@@ -1,7 +1,7 @@
 #ifndef SYSPROBE_PROCESS_H
 #define SYSPROBE_PROCESS_H
 
-#include "sysprobe/addr2line.h"
+#include "sysprobe-library/addr2line.h"
 #include <map>
 #include <memory>
 
@@ -26,6 +26,9 @@ class process_collector {
 
 	/* 根据进程号那 addr2line 上下文 */
 	struct addr2line *fetch_addr2line_ctx(int pid);
+
+	/* 打印收集的信息,用于调试 */
+	void show_all_items();
 
     private:
 	/* 保存系统中的所有进程 */

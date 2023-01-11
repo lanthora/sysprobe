@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "sysprobe/callback.h"
 #include "sysprobe-common/types.h"
-#include "sysprobe/addr2line.h"
+#include "sysprobe-library/addr2line.h"
 #include "sysprobe/sysprobe.skel.h"
 #include <bpf/bpf.h>
 #include <csignal>

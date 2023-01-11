@@ -1,13 +1,15 @@
-#include "sysprobe/process.h"
-#include "sysprobe/addr2line.h"
+#include "sysprobe-library/process.h"
+#include "sysprobe-library/addr2line.h"
+#include <cstdio>
 #include <proc/readproc.h>
 #include <set>
 
 void process_collector::scan_procfs()
 {
-	/* 用 set 去重 */
 	std::set<int> pids;
 
+	// openproc 申请一块堆内存作为缓冲区,运行过程中不会释放, valgrind 会发现这个问题
+	// https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=730460#20
 	PROCTAB *proc = openproc(PROC_FILLSTAT);
 	proc_t proc_info;
 	memset(&proc_info, 0, sizeof(proc_info));
@@ -67,4 +69,14 @@ struct addr2line *process_collector::fetch_addr2line_ctx(int pid)
 		return NULL;
 	}
 	return (*it).second.addr2line_ctx.get();
+}
+
+void process_collector::show_all_items()
+{
+	for (auto item : process_map) {
+		printf("================================================================================\n");
+		printf("pid:%d\n", item.second.pid);
+		printf("addr2line ctx:%p\n", item.second.addr2line_ctx.get());
+		printf("================================================================================\n\n");
+	}
 }
