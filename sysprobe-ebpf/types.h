@@ -105,4 +105,22 @@ struct tcp_probe_value {
 #define sk_num __sk_common.skc_num
 #define sk_dport __sk_common.skc_dport
 
+// 在不包含任何其他 TCP Options 的情况下,单个 Option 最多能放 40 字节.
+// 减去 kind(1) length(1) exid(2) 的 4 个字节最多还能放 36 字节.
+// 一般情况下还会存在其他 TCP Options, 无法放满.
+#define TCP_EXP_OPT_CONTENTS_MAX 36
+
+// ref: https://datatracker.ietf.org/doc/html/rfc6994
+struct tcp_options_header {
+	u8 kind;
+	u8 length;
+	u16 exid;
+
+	union {
+		u8 buffer[TCP_EXP_OPT_CONTENTS_MAX];
+		u32 pid;
+	};
+
+} __attribute__((__packed__));
+
 #endif
