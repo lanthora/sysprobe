@@ -110,17 +110,22 @@ struct tcp_probe_value {
 // 一般情况下还会存在其他 TCP Options, 无法放满.
 #define TCP_EXP_OPT_CONTENTS_MAX 36
 
-// ref: https://datatracker.ietf.org/doc/html/rfc6994
+// ref: https://datatracker.ietf.org/doc/rfc6994/
 struct tcp_options_header {
 	u8 kind;
 	u8 length;
 	u16 exid;
 
 	union {
-		u8 buffer[TCP_EXP_OPT_CONTENTS_MAX];
-		u32 pid;
-	};
+		struct {
+			u16 port;
+			u32 ip;
+		} __attribute__((__packed__)) toa;
+	} __attribute__((__packed__));
 
 } __attribute__((__packed__));
+
+#define TCP_OPTIONS_EXP_TYPE_BASE 0xcafe
+#define TCP_OPTIONS_EXP_TYPE_TOA (TCP_OPTIONS_EXP_TYPE_BASE + 1)
 
 #endif
